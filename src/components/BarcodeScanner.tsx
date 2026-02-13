@@ -11,6 +11,10 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
   const scannerRef = useRef<HTMLDivElement>(null);
   const [scanning, setScanning] = useState(false);
   const html5QrCodeRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
+  const onScanRef = useRef(onScan);
+  const onErrorRef = useRef(onError);
+  onScanRef.current = onScan;
+  onErrorRef.current = onError;
 
   useEffect(() => {
     let mounted = true;
@@ -19,10 +23,10 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
       const { Html5Qrcode } = await import("html5-qrcode");
       if (!mounted || !scannerRef.current) return;
 
-      const scanner = new Html5Qrcode("barcode-reader");
-      html5QrCodeRef.current = scanner;
-
       try {
+        const scanner = new Html5Qrcode("barcode-reader");
+        html5QrCodeRef.current = scanner;
+
         await scanner.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 150 } },
@@ -30,15 +34,15 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
             const cleaned = decodedText.replace(/[^0-9X]/gi, "");
             if (cleaned.length === 10 || cleaned.length === 13) {
               scanner.stop().catch(() => {});
-              onScan(cleaned);
+              onScanRef.current(cleaned);
             }
           },
           () => {}
         );
         if (mounted) setScanning(true);
-      } catch (err) {
+      } catch {
         if (mounted) {
-          onError?.("Impossible d'accéder à la caméra. Vérifiez les permissions.");
+          onErrorRef.current?.("Impossible d'accéder à la caméra. Vérifiez les permissions.");
         }
       }
     }
@@ -51,7 +55,7 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
         html5QrCodeRef.current.stop().catch(() => {});
       }
     };
-  }, [onScan, onError]);
+  }, []);
 
   return (
     <div className="relative">
