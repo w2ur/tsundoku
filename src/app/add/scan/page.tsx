@@ -26,12 +26,17 @@ export default function ScanPage() {
 
   async function handleScan(isbn: string) {
     setStatus("loading");
-    const result = await getBookByISBN(isbn);
-    if (result) {
-      setBookData({ title: result.title, author: result.author, coverUrl: result.coverUrl });
-      setStatus("confirm");
-    } else {
-      setError(`ISBN ${isbn} introuvable. Essayez la saisie manuelle.`);
+    try {
+      const result = await getBookByISBN(isbn);
+      if (result) {
+        setBookData({ title: result.title, author: result.author, coverUrl: result.coverUrl });
+        setStatus("confirm");
+      } else {
+        setError(`ISBN ${isbn} introuvable. Essayez la saisie manuelle.`);
+        setStatus("error");
+      }
+    } catch {
+      setError("Erreur de connexion. Vérifiez votre réseau et réessayez.");
       setStatus("error");
     }
   }

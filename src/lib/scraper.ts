@@ -30,7 +30,7 @@ export function extractMetadata(html: string, url: string): ScrapedMetadata {
   const ogImage = $('meta[property="og:image"]').attr("content") || "";
 
   // Try to extract author from meta
-  const author =
+  const metaAuthor =
     $('meta[name="author"]').attr("content") ||
     $('meta[property="book:author"]').attr("content") ||
     $('meta[name="twitter:data1"]').attr("content") ||
@@ -40,5 +40,28 @@ export function extractMetadata(html: string, url: string): ScrapedMetadata {
   const title = ogTitle || $("title").text().split(/[-|–—]/)[0].trim();
   const coverUrl = ogImage;
 
-  return { title, author, coverUrl };
+  // If OG/meta extraction found enough data, return it
+  if (title && (metaAuthor || coverUrl)) {
+    return { title, author: metaAuthor, coverUrl };
+  }
+
+  // DOM fallback for sites without OG tags (e.g. Babelio)
+  const domAuthor =
+    metaAuthor ||
+    $('a[href*="/auteur/"]').first().text().trim() ||
+    $('[itemprop="author"]').first().text().trim() ||
+    "";
+
+  const domCover =
+    coverUrl ||
+    (() => {
+      const imgByAlt = $('img[alt*="par"]').first();
+      if (imgByAlt.length) return imgByAlt.attr("src") || "";
+      return $('[itemprop="image"]').attr("src") || "";
+    })() ||
+    "";
+
+  const domTitle = title || $("h1").first().text().trim();
+
+  return { title: domTitle, author: domAuthor, coverUrl: domCover };
 }

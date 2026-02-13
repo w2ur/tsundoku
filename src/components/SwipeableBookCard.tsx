@@ -16,18 +16,18 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
   const constraintRef = useRef(null);
 
   const stageIndex = STAGES.indexOf(book.stage);
-  const canSwipeLeft = stageIndex < STAGES.length - 1;
-  const canSwipeRight = stageIndex > 0;
+  const canSwipeRight = stageIndex < STAGES.length - 1;
+  const canSwipeLeft = stageIndex > 0;
 
-  const nextStage = canSwipeLeft ? STAGES[stageIndex + 1] : null;
-  const prevStage = canSwipeRight ? STAGES[stageIndex - 1] : null;
+  const nextStage = canSwipeRight ? STAGES[stageIndex + 1] : null;
+  const prevStage = canSwipeLeft ? STAGES[stageIndex - 1] : null;
 
   async function handleDragEnd(_: unknown, info: PanInfo) {
     const offset = info.offset.x;
-    if (offset > SWIPE_THRESHOLD && prevStage) {
-      await updateBookStage(book.id, prevStage);
-    } else if (offset < -SWIPE_THRESHOLD && nextStage) {
+    if (offset > SWIPE_THRESHOLD && nextStage) {
       await updateBookStage(book.id, nextStage);
+    } else if (offset < -SWIPE_THRESHOLD && prevStage) {
+      await updateBookStage(book.id, prevStage);
     }
   }
 
@@ -35,10 +35,10 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
     <div ref={constraintRef} className="relative overflow-hidden rounded-xl">
       {/* Swipe indicators */}
       <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-start pl-3 text-xs text-forest/30">
-        {prevStage && <span>{STAGE_CONFIG[prevStage].emoji}</span>}
+        {nextStage && <span>{STAGE_CONFIG[nextStage].emoji}</span>}
       </div>
       <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-end pr-3 text-xs text-forest/30">
-        {nextStage && <span>{STAGE_CONFIG[nextStage].emoji}</span>}
+        {prevStage && <span>{STAGE_CONFIG[prevStage].emoji}</span>}
       </div>
 
       <motion.div
