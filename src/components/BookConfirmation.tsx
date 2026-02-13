@@ -1,0 +1,56 @@
+"use client";
+
+import Image from "next/image";
+
+interface Props {
+  title: string;
+  author: string;
+  coverUrl: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading?: boolean;
+}
+
+export default function BookConfirmation({ title, author, coverUrl, onConfirm, onCancel, loading }: Props) {
+  return (
+    <div className="flex flex-col items-center gap-6 py-6">
+      <div className="relative w-32 h-48 rounded-xl overflow-hidden shadow-lg bg-cream">
+        {coverUrl ? (
+          <Image
+            src={coverUrl}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="128px"
+            unoptimized={coverUrl.startsWith("data:")}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            </svg>
+          </div>
+        )}
+      </div>
+      <div className="text-center">
+        <h2 className="font-serif text-xl font-semibold text-ink">{title}</h2>
+        {author && <p className="text-sm text-forest/50 mt-1">{author}</p>}
+      </div>
+      <div className="flex gap-3 w-full max-w-xs">
+        <button
+          onClick={onCancel}
+          className="flex-1 py-2.5 border border-forest/15 rounded-lg text-sm font-medium text-forest/60 hover:bg-cream transition-colors"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={loading}
+          className="flex-1 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "..." : "Ajouter"}
+        </button>
+      </div>
+    </div>
+  );
+}

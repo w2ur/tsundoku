@@ -1,0 +1,109 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { useBooksByStage } from "@/hooks/useBooks";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { updateBookStage } from "@/lib/books";
+import { STAGES, STAGE_CONFIG } from "@/lib/constants";
+import type { Stage } from "@/lib/types";
+import StageTabs from "./StageTabs";
+import AddButton from "./AddButton";
+import BookCard from "./BookCard";
+import SwipeableBookCard from "./SwipeableBookCard";
+import EmptyState from "./EmptyState";
+
+export default function KanbanBoard() {
+  const booksByStage = useBooksByStage();
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState<Stage>("a_acheter");
+
+  const handleDragEnd = useCallback(async (result: DropResult) => {
+    const { draggableId, destination } = result;
+    if (!destination) return;
+    const newStage = destination.droppableId as Stage;
+    await updateBookStage(draggableId, newStage);
+  }, []);
+
+  if (!booksByStage) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse text-forest/30 text-sm">Chargement...</div>
+      </div>
+    );
+  }
+
+  const counts = {
+    a_acheter: booksByStage.a_acheter.length,
+    tsundoku: booksByStage.tsundoku.length,
+    bibliotheque: booksByStage.bibliotheque.length,
+    revendre: booksByStage.revendre.length,
+  };
+
+  if (isMobile) {
+    const books = booksByStage[activeTab];
+    return (
+      <div className="flex flex-col h-[calc(100vh-65px)]">
+        <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} />
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {books.length === 0 ? (
+            <EmptyState showAdd={activeTab === "a_acheter"} />
+          ) : (
+            books.map((book) => <SwipeableBookCard key={book.id} book={book} />)
+          )}
+        </div>
+        <AddButton />
+      </div>
+    );
+  }
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="flex gap-4 p-4 md:p-6 h-[calc(100vh-65px)] overflow-hidden">
+        {STAGES.map((stage) => (
+          <Droppable key={stage} droppableId={stage}>
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`flex-1 min-w-0 flex flex-col rounded-xl p-2 transition-colors ${
+                  snapshot.isDraggingOver ? "bg-forest/5" : "bg-cream/50"
+                }`}
+              >
+                <div className="flex items-center gap-2 px-3 py-2 mb-2">
+                  <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
+                    {STAGE_CONFIG[stage].label}
+                  </h2>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
+                    {counts[stage]}
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
+                  {booksByStage[stage].length === 0 ? (
+                    <EmptyState showAdd={stage === "a_acheter"} />
+                  ) : (
+                    booksByStage[stage].map((book, index) => (
+                      <Draggable key={book.id} draggableId={book.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <BookCard book={book} />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
+                  )}
+                  {provided.placeholder}
+                </div>
+              </div>
+            )}
+          </Droppable>
+        ))}
+        <AddButton />
+      </div>
+    </DragDropContext>
+  );
+}

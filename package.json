@@ -1,0 +1,39 @@
+{
+  "name": "tsundoku",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && serwist build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
+    "@serwist/next": "^9.5.5",
+    "cheerio": "^1.2.0",
+    "dexie": "^4.3.0",
+    "dexie-react-hooks": "^4.2.0",
+    "html5-qrcode": "^2.3.8",
+    "motion": "^12.34.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "serwist": "^9.5.5",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@serwist/cli": "^9.5.5",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

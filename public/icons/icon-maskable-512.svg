@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#2D4A3E"/>
+  <g transform="translate(256,225)">
+    <path d="M-16,-100 C-56,-100 -110,-90 -110,-78 L-110,78 C-110,90 -56,100 -16,100 L-16,-100Z" fill="#FAF8F5" opacity="0.9"/>
+    <path d="M16,-100 C56,-100 110,-90 110,-78 L110,78 C110,90 56,100 16,100 L16,-100Z" fill="#FAF8F5" opacity="0.9"/>
+    <path d="M-16,-100 L-16,100 L16,100 L16,-100Z" fill="#E8E4DF"/>
+  </g>
+  <text x="256" y="400" text-anchor="middle" font-family="serif" font-size="48" fill="#FAF8F5" opacity="0.7">積読</text>
+</svg>
