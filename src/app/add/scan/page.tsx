@@ -41,10 +41,10 @@ export default function ScanPage() {
     }
   }
 
-  async function handleConfirm() {
+  async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
     if (!bookData) return;
     setSaving(true);
-    await addBook(bookData);
+    await addBook({ ...bookData, ...extra });
     router.push("/");
   }
 

@@ -5,17 +5,6 @@ import Header from "@/components/Header";
 
 const methods = [
   {
-    href: "/add/url",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-      </svg>
-    ),
-    title: "Coller un lien",
-    desc: "Amazon, Babelio, Goodreads...",
-  },
-  {
     href: "/add/scan",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -26,17 +15,6 @@ const methods = [
     ),
     title: "Scanner un code-barres",
     desc: "ISBN depuis la couverture",
-  },
-  {
-    href: "/add/photo",
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-        <circle cx="12" cy="13" r="3" />
-      </svg>
-    ),
-    title: "Prendre une photo",
-    desc: "Photographier la couverture",
   },
   {
     href: "/add/manual",

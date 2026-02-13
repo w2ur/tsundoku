@@ -3,7 +3,11 @@ import { db } from "./db";
 import type { Book, Stage } from "./types";
 
 export async function addBook(
-  data: Pick<Book, "title" | "author" | "coverUrl"> & { stage?: Stage }
+  data: Pick<Book, "title" | "author" | "coverUrl"> & {
+    stage?: Stage;
+    notes?: string;
+    storeUrl?: string;
+  }
 ): Promise<Book> {
   const book: Book = {
     id: uuidv4(),
@@ -13,6 +17,8 @@ export async function addBook(
     stage: data.stage ?? "a_acheter",
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    ...(data.notes && { notes: data.notes }),
+    ...(data.storeUrl && { storeUrl: data.storeUrl }),
   };
   await db.books.add(book);
   return book;
@@ -28,7 +34,7 @@ export async function updateBookStage(id: string, stage: Stage): Promise<void> {
 
 export async function updateBook(
   id: string,
-  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage">>
+  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl">>
 ): Promise<void> {
   await db.books.update(id, { ...data, updatedAt: Date.now() });
 }

@@ -8,4 +8,6 @@ export interface Book {
   stage: Stage;
   createdAt: number;
   updatedAt: number;
+  notes?: string;
+  storeUrl?: string;
 }

@@ -12,10 +12,10 @@ export default function ManualAddPage() {
   const [pending, setPending] = useState<BookFormData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleConfirm() {
+  async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
     if (!pending) return;
     setLoading(true);
-    await addBook(pending);
+    await addBook({ ...pending, ...extra });
     router.push("/");
   }
 
@@ -29,6 +29,8 @@ export default function ManualAddPage() {
             title={pending.title}
             author={pending.author}
             coverUrl={pending.coverUrl}
+            notes={pending.notes}
+            storeUrl={pending.storeUrl}
             onConfirm={handleConfirm}
             onCancel={() => setPending(null)}
             loading={loading}

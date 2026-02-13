@@ -7,9 +7,10 @@ interface Props {
   onSelect: (result: OpenLibraryResult) => void;
   value: string;
   onChange: (value: string) => void;
+  onNoResults?: (empty: boolean) => void;
 }
 
-export default function OpenLibraryAutocomplete({ onSelect, value, onChange }: Props) {
+export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onNoResults }: Props) {
   const [results, setResults] = useState<OpenLibraryResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export default function OpenLibraryAutocomplete({ onSelect, value, onChange }: P
       setResults(data);
       setIsOpen(data.length > 0);
       setLoading(false);
+      onNoResults?.(data.length === 0);
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);

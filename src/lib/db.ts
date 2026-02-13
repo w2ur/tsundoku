@@ -9,6 +9,9 @@ class TsundokuDB extends Dexie {
     this.version(1).stores({
       books: "id, stage, title, author, createdAt, updatedAt",
     });
+    this.version(2).stores({
+      books: "id, stage, title, author, createdAt, updatedAt",
+    });
   }
 }
 
