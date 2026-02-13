@@ -1,4 +1,6 @@
-export const LITERARY_QUOTES = [
+export type Quote = { text: string; author: string };
+
+export const LITERARY_QUOTES: Quote[] = [
   { text: "Un livre est un jardin que l'on porte dans sa poche.", author: "Proverbe chinois" },
   { text: "Il n'y a pas de meilleure frégate qu'un livre pour nous emporter au loin.", author: "Emily Dickinson" },
   { text: "Les livres sont les miroirs de l'âme.", author: "Virginia Woolf" },
@@ -11,4 +13,9 @@ export const LITERARY_QUOTES = [
 
 export function getRandomQuote() {
   return LITERARY_QUOTES[Math.floor(Math.random() * LITERARY_QUOTES.length)];
+}
+
+export function getUniqueQuotes(count: number) {
+  const shuffled = [...LITERARY_QUOTES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { updateBookStage } from "@/lib/books";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import type { Stage } from "@/lib/types";
+import { getUniqueQuotes } from "@/lib/quotes";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
 import BookCard from "./BookCard";
@@ -17,6 +18,11 @@ export default function KanbanBoard() {
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<Stage>("a_acheter");
+
+  const uniqueQuotes = useMemo(() => {
+    const quotes = getUniqueQuotes(STAGES.length);
+    return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
+  }, []);
 
   const handleDragEnd = useCallback(async (result: DropResult) => {
     const { draggableId, destination } = result;
@@ -47,7 +53,7 @@ export default function KanbanBoard() {
         <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {books.length === 0 ? (
-            <EmptyState showAdd={activeTab === "a_acheter"} />
+            <EmptyState showAdd={activeTab === "a_acheter"} quote={uniqueQuotes[activeTab]} />
           ) : (
             books.map((book) => <SwipeableBookCard key={book.id} book={book} />)
           )}
@@ -80,7 +86,7 @@ export default function KanbanBoard() {
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
                   {booksByStage[stage].length === 0 ? (
-                    <EmptyState showAdd={stage === "a_acheter"} />
+                    <EmptyState showAdd={stage === "a_acheter"} quote={uniqueQuotes[stage]} />
                   ) : (
                     booksByStage[stage].map((book, index) => (
                       <Draggable key={book.id} draggableId={book.id} index={index}>

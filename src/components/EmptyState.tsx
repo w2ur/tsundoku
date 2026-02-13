@@ -1,10 +1,11 @@
 "use client";
 
-import { getRandomQuote } from "@/lib/quotes";
+import { getRandomQuote, type Quote } from "@/lib/quotes";
 import { useMemo } from "react";
 
-export default function EmptyState({ showAdd = false }: { showAdd?: boolean }) {
-  const quote = useMemo(() => getRandomQuote(), []);
+export default function EmptyState({ showAdd = false, quote: quoteProp }: { showAdd?: boolean; quote?: Quote }) {
+  const fallback = useMemo(() => getRandomQuote(), []);
+  const quote = quoteProp ?? fallback;
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
