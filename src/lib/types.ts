@@ -10,4 +10,5 @@ export interface Book {
   updatedAt: number;
   notes?: string;
   storeUrl?: string;
+  isbn?: string;
 }

@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import KanbanBoard from "@/components/KanbanBoard";
+import WelcomeGuide from "@/components/WelcomeGuide";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <main className="flex-1">
         <KanbanBoard />
       </main>
+      <WelcomeGuide />
     </div>
   );
 }

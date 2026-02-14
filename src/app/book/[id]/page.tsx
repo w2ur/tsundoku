@@ -19,6 +19,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [notesValue, setNotesValue] = useState("");
   const [editingStoreUrl, setEditingStoreUrl] = useState(false);
   const [storeUrlValue, setStoreUrlValue] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAuthor, setEditAuthor] = useState("");
+  const [editCoverUrl, setEditCoverUrl] = useState("");
 
   if (book === undefined) {
     return (
@@ -62,36 +66,138 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     setEditingStoreUrl(false);
   }
 
+  function startEditing() {
+    setEditTitle(book!.title);
+    setEditAuthor(book!.author);
+    setEditCoverUrl(book!.coverUrl);
+    setEditing(true);
+  }
+
+  async function saveEditing() {
+    await updateBook(book!.id, {
+      title: editTitle.trim() || book!.title,
+      author: editAuthor.trim(),
+      coverUrl: editCoverUrl,
+    });
+    setEditing(false);
+  }
+
+  function handleCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 400;
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setEditCoverUrl(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 px-4 py-8 max-w-lg mx-auto w-full">
         <div className="flex flex-col items-center gap-6">
-          <div className="relative w-40 h-60 rounded-xl overflow-hidden shadow-lg bg-cream">
-            {book.coverUrl ? (
-              <Image
-                src={book.coverUrl}
-                alt={book.title}
-                fill
-                className="object-cover"
-                sizes="160px"
-                unoptimized={book.coverUrl.startsWith("data:")}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                </svg>
-              </div>
-            )}
-          </div>
+          {editing ? (
+            <>
+              <label className="relative w-40 h-60 rounded-xl overflow-hidden shadow-lg bg-cream cursor-pointer group">
+                {editCoverUrl ? (
+                  <img src={editCoverUrl} alt="Couverture" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                    </svg>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                </div>
+                <input type="file" accept="image/*" onChange={handleCoverFile} className="hidden" />
+              </label>
 
-          <div className="text-center">
-            <h1 className="font-serif text-2xl font-semibold text-ink">{book.title}</h1>
-            {book.author && (
-              <p className="text-base text-forest/50 mt-1">{book.author}</p>
-            )}
-          </div>
+              <div className="w-full max-w-xs space-y-2">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30 text-center"
+                  placeholder="Titre"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={editAuthor}
+                  onChange={(e) => setEditAuthor(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30 text-center"
+                  placeholder="Auteur"
+                />
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={saveEditing}
+                    className="flex-1 py-2 bg-forest text-paper rounded-lg text-xs font-medium hover:bg-forest/90 transition-colors"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    className="flex-1 py-2 border border-forest/15 rounded-lg text-xs text-forest/60 hover:bg-cream transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="relative w-40 h-60 rounded-xl overflow-hidden shadow-lg bg-cream">
+                {book.coverUrl ? (
+                  <Image
+                    src={book.coverUrl}
+                    alt={book.title}
+                    fill
+                    className="object-cover"
+                    sizes="160px"
+                    unoptimized={book.coverUrl.startsWith("data:")}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-center">
+                <h1 className="font-serif text-2xl font-semibold text-ink">{book.title}</h1>
+                {book.author && (
+                  <p className="text-base text-forest/50 mt-1">{book.author}</p>
+                )}
+              </div>
+
+              <button
+                onClick={startEditing}
+                className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+              >
+                Modifier
+              </button>
+            </>
+          )}
 
           <StageBadge stage={book.stage} />
 

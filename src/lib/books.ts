@@ -7,6 +7,7 @@ export async function addBook(
     stage?: Stage;
     notes?: string;
     storeUrl?: string;
+    isbn?: string;
   }
 ): Promise<Book> {
   const book: Book = {
@@ -19,6 +20,7 @@ export async function addBook(
     updatedAt: Date.now(),
     ...(data.notes && { notes: data.notes }),
     ...(data.storeUrl && { storeUrl: data.storeUrl }),
+    ...(data.isbn && { isbn: data.isbn }),
   };
   await db.books.add(book);
   return book;
@@ -34,7 +36,7 @@ export async function updateBookStage(id: string, stage: Stage): Promise<void> {
 
 export async function updateBook(
   id: string,
-  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl">>
+  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl" | "isbn">>
 ): Promise<void> {
   await db.books.update(id, { ...data, updatedAt: Date.now() });
 }

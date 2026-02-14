@@ -17,7 +17,7 @@ import EmptyState from "./EmptyState";
 export default function KanbanBoard() {
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<Stage>("a_acheter");
+  const [activeTab, setActiveTab] = useState<Stage>("tsundoku");
 
   const uniqueQuotes = useMemo(() => {
     const quotes = getUniqueQuotes(STAGES.length);

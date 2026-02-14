@@ -24,10 +24,10 @@ export const STAGE_CONFIG: Record<
     emoji: "📖",
   },
   revendre: {
-    label: "Revendre ou jeter",
+    label: "S'en séparer",
     color: "text-amber",
     bgColor: "bg-amber/10",
-    emoji: "📤",
+    emoji: "👋",
   },
 };
 
@@ -35,8 +35,8 @@ export const STAGE_TRANSITIONS: Record<Stage, { label: string; next: Stage }[]> 
   a_acheter: [{ label: "Je l'ai acheté !", next: "tsundoku" }],
   tsundoku: [
     { label: "Je l'ai lu ! → Garder", next: "bibliotheque" },
-    { label: "Je l'ai lu ! → Revendre", next: "revendre" },
+    { label: "Je l'ai lu ! → S'en séparer", next: "revendre" },
   ],
-  bibliotheque: [{ label: "Revendre ou jeter", next: "revendre" }],
+  bibliotheque: [{ label: "S'en séparer", next: "revendre" }],
   revendre: [{ label: "Garder finalement", next: "bibliotheque" }],
 };

@@ -3,6 +3,7 @@ import type { Book } from "./types";
 
 class TsundokuDB extends Dexie {
   books!: EntityTable<Book, "id">;
+  settings!: EntityTable<{ key: string; value: unknown }, "key">;
 
   constructor() {
     super("tsundoku");
@@ -11,6 +12,10 @@ class TsundokuDB extends Dexie {
     });
     this.version(2).stores({
       books: "id, stage, title, author, createdAt, updatedAt",
+    });
+    this.version(3).stores({
+      books: "id, stage, title, author, createdAt, updatedAt",
+      settings: "key",
     });
   }
 }
