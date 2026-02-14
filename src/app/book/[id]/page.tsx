@@ -17,6 +17,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
+  const [editingStoreUrl, setEditingStoreUrl] = useState(false);
+  const [storeUrlValue, setStoreUrlValue] = useState("");
 
   if (book === undefined) {
     return (
@@ -50,6 +52,16 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     setEditingNotes(false);
   }
 
+  function startEditStoreUrl() {
+    setStoreUrlValue(book!.storeUrl ?? "");
+    setEditingStoreUrl(true);
+  }
+
+  async function saveStoreUrl() {
+    await updateBook(book!.id, { storeUrl: storeUrlValue.trim() || undefined });
+    setEditingStoreUrl(false);
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -79,24 +91,68 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
             {book.author && (
               <p className="text-base text-forest/50 mt-1">{book.author}</p>
             )}
-            {book.storeUrl && (
-              <a
-                href={book.storeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-forest/40 hover:text-forest/60 mt-2 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" x2="21" y1="14" y2="3" />
-                </svg>
-                Voir en boutique
-              </a>
-            )}
           </div>
 
           <StageBadge stage={book.stage} />
+
+          {/* Store URL */}
+          <div className="w-full max-w-xs">
+            {editingStoreUrl ? (
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  value={storeUrlValue}
+                  onChange={(e) => setStoreUrlValue(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30"
+                  placeholder="https://..."
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveStoreUrl}
+                    className="flex-1 py-2 bg-forest text-paper rounded-lg text-xs font-medium hover:bg-forest/90 transition-colors"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    onClick={() => setEditingStoreUrl(false)}
+                    className="flex-1 py-2 border border-forest/15 rounded-lg text-xs text-forest/60 hover:bg-cream transition-colors"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            ) : book.storeUrl ? (
+              <div className="flex items-center justify-between gap-2">
+                <a
+                  href={book.storeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-forest/40 hover:text-forest/60 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" x2="21" y1="14" y2="3" />
+                  </svg>
+                  Voir en boutique
+                </a>
+                <button
+                  onClick={startEditStoreUrl}
+                  className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+                >
+                  Modifier
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startEditStoreUrl}
+                className="w-full py-2 text-xs text-forest/40 hover:text-forest/60 transition-colors"
+              >
+                + Ajouter un lien boutique
+              </button>
+            )}
+          </div>
 
           {/* Notes */}
           <div className="w-full max-w-xs">

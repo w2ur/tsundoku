@@ -11,6 +11,7 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
   const scannerRef = useRef<HTMLDivElement>(null);
   const [scanning, setScanning] = useState(false);
   const html5QrCodeRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
+  const stoppedRef = useRef(false);
   const onScanRef = useRef(onScan);
   const onErrorRef = useRef(onError);
   onScanRef.current = onScan;
@@ -33,8 +34,11 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
           (decodedText) => {
             const cleaned = decodedText.replace(/[^0-9X]/gi, "");
             if (cleaned.length === 10 || cleaned.length === 13) {
-              scanner.stop().catch(() => {});
-              onScanRef.current(cleaned);
+              if (stoppedRef.current) return;
+              stoppedRef.current = true;
+              scanner.stop()
+                .then(() => onScanRef.current(cleaned))
+                .catch(() => onScanRef.current(cleaned));
             }
           },
           () => {}
@@ -51,8 +55,9 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
 
     return () => {
       mounted = false;
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current.stop().catch(() => {});
+      if (html5QrCodeRef.current && !stoppedRef.current) {
+        stoppedRef.current = true;
+        try { html5QrCodeRef.current.stop().catch(() => {}); } catch {}
       }
     };
   }, []);

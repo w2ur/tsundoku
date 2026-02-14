@@ -18,11 +18,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tsundoku",
   description: "Your personal book collection, beautifully organized",
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   themeColor: "#2D4A3E",
 };
 
