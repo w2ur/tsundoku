@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
+import { useRef, useState } from "react";
 import OpenLibraryAutocomplete from "./OpenLibraryAutocomplete";
 import type { OpenLibraryResult } from "@/lib/open-library";
-
-const CameraCapture = dynamic(() => import("./CameraCapture"), { ssr: false });
 
 export interface BookFormData {
   title: string;
@@ -27,8 +24,31 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [storeUrl, setStoreUrl] = useState(initial?.storeUrl ?? "");
-  const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [noResults, setNoResults] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 400;
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setCoverUrl(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
 
   function handleAutocompleteSelect(result: OpenLibraryResult) {
     setTitle(result.title);
@@ -80,7 +100,14 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
         <label className="block text-sm font-medium text-forest/70 mb-1">
           Couverture
         </label>
-        {coverUrl && !showCoverPicker ? (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        {coverUrl ? (
           <div className="flex items-start gap-3">
             <img
               src={coverUrl}
@@ -90,26 +117,10 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
             />
             <button
               type="button"
-              onClick={() => { setCoverUrl(""); setShowCoverPicker(true); }}
+              onClick={() => setCoverUrl("")}
               className="text-xs text-forest/40 underline hover:text-forest/60 mt-1"
             >
               Changer
-            </button>
-          </div>
-        ) : showCoverPicker ? (
-          <div className="space-y-2">
-            <CameraCapture
-              onCapture={(dataUrl) => {
-                setCoverUrl(dataUrl);
-                setShowCoverPicker(false);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowCoverPicker(false)}
-              className="text-xs text-forest/40 underline hover:text-forest/60"
-            >
-              Annuler
             </button>
           </div>
         ) : (
@@ -123,9 +134,9 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
             />
             <button
               type="button"
-              onClick={() => setShowCoverPicker(true)}
+              onClick={() => fileInputRef.current?.click()}
               className="flex-shrink-0 px-3 py-2.5 border border-forest/15 rounded-lg text-forest/50 hover:bg-cream transition-colors"
-              title="Prendre une photo"
+              title="Choisir une image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
