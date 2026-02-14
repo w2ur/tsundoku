@@ -3,33 +3,56 @@
   <rect width="512" height="512" fill="#2D4A3E"/>
 
   <!-- Content within 80% safe area (51.2 to 460.8, centered at 256) -->
-  <!-- Book stack — centered in safe area -->
-  <g transform="translate(256,200)">
-    <!-- Bottom book (widest, horizontal) -->
-    <rect x="-90" y="18" width="180" height="30" rx="3" fill="#FAF8F5" opacity="0.9"/>
-    <rect x="-90" y="18" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <rect x="84" y="18" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <line x1="-90" y1="48" x2="90" y2="48" stroke="#E8E4DF" stroke-width="0.8"/>
+  <!-- Dimensional book stack — centered and scaled to fit safe area -->
+  <g transform="translate(256, 200)">
 
-    <!-- Second book (slightly narrower, offset left) -->
-    <rect x="-82" y="-12" width="154" height="30" rx="3" fill="#FAF8F5" opacity="0.9"/>
-    <rect x="-82" y="-12" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <rect x="66" y="-12" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <line x1="-82" y1="18" x2="72" y2="18" stroke="#E8E4DF" stroke-width="0.8"/>
-
-    <!-- Third book (medium width, offset right) -->
-    <rect x="-74" y="-42" width="164" height="30" rx="3" fill="#FAF8F5" opacity="0.9"/>
-    <rect x="-74" y="-42" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <rect x="84" y="-42" width="6" height="30" rx="2" fill="#E8E4DF"/>
-    <line x1="-74" y1="-12" x2="90" y2="-12" stroke="#E8E4DF" stroke-width="0.8"/>
-
-    <!-- Top leaning book (~15 degrees) -->
-    <g transform="rotate(-15, -16, -62)">
-      <rect x="-80" y="-80" width="144" height="28" rx="3" fill="#FAF8F5" opacity="0.9"/>
-      <rect x="-80" y="-80" width="6" height="28" rx="2" fill="#E8E4DF"/>
-      <rect x="58" y="-80" width="6" height="28" rx="2" fill="#E8E4DF"/>
-      <line x1="-80" y1="-52" x2="64" y2="-52" stroke="#E8E4DF" stroke-width="0.8"/>
+    <!-- === Bottom book (paper white #FAF8F5) === -->
+    <g>
+      <!-- Right face - page edges -->
+      <polygon points="92,30 100,21 100,58 92,67" fill="#E8E4DF"/>
+      <line x1="92" y1="38" x2="100" y2="29" stroke="#D5D0CB" stroke-width="0.6"/>
+      <line x1="92" y1="46" x2="100" y2="37" stroke="#D5D0CB" stroke-width="0.6"/>
+      <line x1="92" y1="54" x2="100" y2="45" stroke="#D5D0CB" stroke-width="0.6"/>
+      <line x1="92" y1="62" x2="100" y2="53" stroke="#D5D0CB" stroke-width="0.6"/>
+      <!-- Top face -->
+      <polygon points="-96,30 -88,21 100,21 92,30" fill="#EDEAE6"/>
+      <!-- Front cover -->
+      <rect x="-96" y="30" width="188" height="37" rx="3" fill="#FAF8F5"/>
+      <!-- Spine -->
+      <rect x="-96" y="30" width="7" height="37" rx="2" fill="#E0DDD8"/>
     </g>
+
+    <!-- === Middle book (cream #F0E8DF) === -->
+    <g>
+      <!-- Right face - page edges -->
+      <polygon points="84,-10 92,-19 92,18 84,27" fill="#DDD5CC"/>
+      <line x1="84" y1="-2" x2="92" y2="-11" stroke="#CFC7BE" stroke-width="0.6"/>
+      <line x1="84" y1="6" x2="92" y2="-3" stroke="#CFC7BE" stroke-width="0.6"/>
+      <line x1="84" y1="14" x2="92" y2="5" stroke="#CFC7BE" stroke-width="0.6"/>
+      <line x1="84" y1="22" x2="92" y2="13" stroke="#CFC7BE" stroke-width="0.6"/>
+      <!-- Top face -->
+      <polygon points="-88,-10 -80,-19 92,-19 84,-10" fill="#E6DED5"/>
+      <!-- Front cover -->
+      <rect x="-88" y="-10" width="172" height="37" rx="3" fill="#F0E8DF"/>
+      <!-- Spine -->
+      <rect x="-88" y="-10" width="7" height="37" rx="2" fill="#D8D0C7"/>
+    </g>
+
+    <!-- === Top book (light amber #E8D5C0, leaning -12deg) === -->
+    <g transform="rotate(-12, 0, -32)">
+      <!-- Right face - page edges -->
+      <polygon points="78,-50 86,-59 86,-22 78,-13" fill="#D5C2AD"/>
+      <line x1="78" y1="-42" x2="86" y2="-51" stroke="#C5B29D" stroke-width="0.6"/>
+      <line x1="78" y1="-34" x2="86" y2="-43" stroke="#C5B29D" stroke-width="0.6"/>
+      <line x1="78" y1="-26" x2="86" y2="-35" stroke="#C5B29D" stroke-width="0.6"/>
+      <!-- Top face -->
+      <polygon points="-80,-50 -72,-59 86,-59 78,-50" fill="#DFCCB7"/>
+      <!-- Front cover -->
+      <rect x="-80" y="-50" width="158" height="37" rx="3" fill="#E8D5C0"/>
+      <!-- Spine -->
+      <rect x="-80" y="-50" width="7" height="37" rx="2" fill="#CEBDA8"/>
+    </g>
+
   </g>
 
   <!-- Kanji text — within safe area -->
