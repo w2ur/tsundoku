@@ -47,6 +47,10 @@ npm run test:watch # Run tests in watch mode
 
 None currently. Build must produce zero warnings.
 
+## License
+
+AGPL-3.0-only. Commercial licensing available — contact w@revah.paris.
+
 ## Deployment
 
 - **Platform**: Vercel (auto-deploy on push to main)
