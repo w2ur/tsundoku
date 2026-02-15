@@ -54,7 +54,7 @@ AGPL-3.0-only. Commercial licensing available — contact w@revah.paris.
 ## Deployment
 
 - **Platform**: Vercel (auto-deploy on push to main)
-- **URL**: https://tsundoku-alpha.vercel.app (future: my-tsundoku.app)
+- **URL**: https://www.my-tsundoku.app
 
 ## Project-Specific Rules
 

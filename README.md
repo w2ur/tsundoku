@@ -55,8 +55,7 @@ src/
 
 Auto-deployed on **Vercel** on push to `main`.
 
-- **Current URL**: https://tsundoku-alpha.vercel.app
-- **Future domain**: my-tsundoku.app
+- **URL**: https://www.my-tsundoku.app
 
 ## License
 
