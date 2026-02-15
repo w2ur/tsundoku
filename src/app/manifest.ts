@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Tsundoku",
-    short_name: "Tsundoku",
+    name: "My Tsundoku",
+    short_name: "My Tsundoku",
     description: "Your personal book collection, beautifully organized",
     start_url: "/",
     display: "standalone",

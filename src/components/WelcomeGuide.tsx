@@ -34,7 +34,7 @@ export default function WelcomeGuide() {
       />
       <div className="relative bg-paper rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-sm mx-auto">
         <h2 className="font-serif text-xl font-semibold text-ink text-center">
-          Bienvenue sur Tsundoku
+          Bienvenue sur My Tsundoku
         </h2>
         <p className="text-sm text-forest/50 text-center mt-1">
           Organisez vos lectures en 4 étapes

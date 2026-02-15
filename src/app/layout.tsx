@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tsundoku",
+  title: "My Tsundoku",
   description: "Your personal book collection, beautifully organized",
   icons: {
     apple: "/icons/apple-touch-icon.png",

@@ -58,7 +58,7 @@ export default function SettingsPage() {
             À propos
           </h2>
           <p className="text-xs text-forest/40 leading-relaxed">
-            Tsundoku (積ん読) — l&apos;art d&apos;acquérir des livres et de les laisser s&apos;empiler.
+            My Tsundoku (積ん読) — l&apos;art d&apos;acquérir des livres et de les laisser s&apos;empiler.
             Une application pour organiser votre collection personnelle de livres.
           </p>
           <div className="flex items-center gap-3 mt-3">
