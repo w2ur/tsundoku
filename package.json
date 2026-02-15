@@ -1,7 +1,8 @@
 {
   "name": "tsundoku",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "next dev",

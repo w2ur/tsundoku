@@ -58,6 +58,12 @@ Auto-deployed on **Vercel** on push to `main`.
 - **Current URL**: https://tsundoku-alpha.vercel.app
 - **Future domain**: my-tsundoku.app
 
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+Commercial licensing available — contact [w@revah.paris](mailto:w@revah.paris).
+
 ## Author
 
 Made with care by [William](https://william.revah.paris)
