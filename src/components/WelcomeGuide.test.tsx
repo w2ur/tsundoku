@@ -1,0 +1,76 @@
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+const { mockPut, mockQueryResult } = vi.hoisted(() => ({
+  mockPut: vi.fn(),
+  mockQueryResult: { current: undefined as undefined | null | { key: string; value: unknown } },
+}));
+
+vi.mock("dexie-react-hooks", () => ({
+  useLiveQuery: () => mockQueryResult.current,
+}));
+
+vi.mock("@/lib/db", () => ({
+  db: {
+    settings: {
+      get: vi.fn(),
+      put: mockPut,
+    },
+  },
+}));
+
+import WelcomeGuide from "./WelcomeGuide";
+
+afterEach(() => {
+  cleanup();
+  mockPut.mockClear();
+  mockQueryResult.current = undefined;
+});
+
+describe("WelcomeGuide", () => {
+  it("renders nothing while loading", () => {
+    mockQueryResult.current = undefined;
+    const { container } = render(<WelcomeGuide />);
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("renders the guide when hasSeenWelcome key does not exist", () => {
+    mockQueryResult.current = null;
+    render(<WelcomeGuide />);
+    expect(screen.getByText("Bienvenue sur My Tsundoku")).toBeTruthy();
+    expect(screen.getByText("C'est parti !")).toBeTruthy();
+  });
+
+  it("renders nothing when hasSeenWelcome is true", () => {
+    mockQueryResult.current = { key: "hasSeenWelcome", value: true };
+    const { container } = render(<WelcomeGuide />);
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("dismisses the guide when the button is clicked", async () => {
+    mockQueryResult.current = null;
+    const user = userEvent.setup();
+    render(<WelcomeGuide />);
+    await user.click(screen.getByText("C'est parti !"));
+    expect(mockPut).toHaveBeenCalledWith({
+      key: "hasSeenWelcome",
+      value: true,
+    });
+    expect(screen.queryByText("Bienvenue sur My Tsundoku")).toBeNull();
+  });
+
+  it("dismisses the guide when the backdrop is clicked", async () => {
+    mockQueryResult.current = null;
+    const user = userEvent.setup();
+    render(<WelcomeGuide />);
+    const backdrop = document.querySelector(".bg-forest\\/30");
+    expect(backdrop).toBeTruthy();
+    await user.click(backdrop!);
+    expect(mockPut).toHaveBeenCalledWith({
+      key: "hasSeenWelcome",
+      value: true,
+    });
+    expect(screen.queryByText("Bienvenue sur My Tsundoku")).toBeNull();
+  });
+});

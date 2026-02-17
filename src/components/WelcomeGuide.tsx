@@ -8,16 +8,16 @@ export default function WelcomeGuide() {
   const [dismissed, setDismissed] = useState(false);
 
   const hasSeenWelcome = useLiveQuery(
-    () => db.settings.get("hasSeenWelcome"),
+    async () => (await db.settings.get("hasSeenWelcome")) ?? null,
     []
   );
 
-  if (dismissed || hasSeenWelcome?.value === true) {
+  // Still loading from DB
+  if (hasSeenWelcome === undefined) {
     return null;
   }
 
-  // Still loading from DB
-  if (hasSeenWelcome === undefined) {
+  if (dismissed || hasSeenWelcome?.value === true) {
     return null;
   }
 
