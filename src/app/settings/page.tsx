@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ExportButton from "@/components/ExportButton";
@@ -7,12 +8,29 @@ import ImportButton from "@/components/ImportButton";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import { roadmap } from "@/lib/roadmap";
+import { changelog } from "@/lib/changelog";
 
 export default function SettingsPage() {
   const booksByStage = useBooksByStage();
   const totalBooks = booksByStage
     ? STAGES.reduce((sum, s) => sum + booksByStage[s].length, 0)
     : 0;
+
+  const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
+    () => new Set(changelog.length > 0 ? [changelog[0].version] : [])
+  );
+
+  const toggleVersion = (version: string) => {
+    setExpandedVersions((prev) => {
+      const next = new Set(prev);
+      if (next.has(version)) {
+        next.delete(version);
+      } else {
+        next.add(version);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -80,6 +98,71 @@ export default function SettingsPage() {
               Me contacter
             </a>
           </p>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
+            Nouveautés
+          </h2>
+          <div className="space-y-2">
+            {changelog.map((entry) => {
+              const isExpanded = expandedVersions.has(entry.version);
+              return (
+                <div
+                  key={entry.version}
+                  className="bg-white border border-forest/8 rounded-xl overflow-hidden"
+                >
+                  <button
+                    onClick={() => toggleVersion(entry.version)}
+                    className="w-full flex items-center justify-between p-4 text-left"
+                  >
+                    <span className="text-sm font-medium text-ink">
+                      v{entry.version}{" "}
+                      <span className="text-forest/40 font-normal">
+                        ·{" "}
+                        {new Date(
+                          entry.date + "T00:00:00"
+                        ).toLocaleDateString("fr-FR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={`text-forest/30 transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  {isExpanded && (
+                    <ul className="px-4 pb-4 space-y-1">
+                      {entry.changes.map((change, i) => (
+                        <li
+                          key={i}
+                          className="text-xs text-forest/50 flex gap-2"
+                        >
+                          <span className="text-forest/20">•</span>
+                          {change}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         <section className="mt-12 pt-8 border-t border-forest/10">
