@@ -6,6 +6,7 @@ import ExportButton from "@/components/ExportButton";
 import ImportButton from "@/components/ImportButton";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
+import { roadmap } from "@/lib/roadmap";
 
 export default function SettingsPage() {
   const booksByStage = useBooksByStage();
@@ -52,6 +53,33 @@ export default function SettingsPage() {
           </p>
           <ExportButton />
           <ImportButton />
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
+            Prochainement
+          </h2>
+          <div className="bg-white border border-forest/8 rounded-xl p-4 space-y-3">
+            {roadmap.map((item) => (
+              <div key={item.title} className="flex gap-3">
+                <span className="text-base leading-relaxed">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-medium text-ink">{item.title}</p>
+                  <p className="text-xs text-forest/40">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-forest/30 mt-2 italic">
+            Ces fonctionnalités ne sont pas dans un ordre particulier.
+            Une idée ou une préférence ?{" "}
+            <a
+              href="mailto:contact@my-tsundoku.app?subject=%5BTsundoku%5D%20Suggestion"
+              className="underline hover:text-forest/50 transition-colors"
+            >
+              Me contacter
+            </a>
+          </p>
         </section>
 
         <section className="mt-12 pt-8 border-t border-forest/10">
