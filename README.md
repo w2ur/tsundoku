@@ -51,6 +51,18 @@ src/
 └── lib/           # Business logic, types, DB, constants
 ```
 
+## Roadmap
+
+Planned features (in no particular order):
+
+- **Partagez votre Tsundoku** — Share your book piles and recommendations with friends
+- **Clubs de lecture** — Find readers with the same books and start a club
+- **Trouver en librairie** — Find your books in online bookstores
+- **Statistiques de lecture** — Track how many books you read per month and year
+- **Synchronisation cloud** — Sync your library across devices
+
+Have a suggestion? [Get in touch](mailto:contact@my-tsundoku.app).
+
 ## Deployment
 
 Auto-deployed on **Vercel** on push to `main`.
