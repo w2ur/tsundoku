@@ -17,7 +17,7 @@ export default function SettingsPage() {
     : 0;
 
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
-    () => new Set(changelog.length > 0 ? [changelog[0].version] : [])
+    () => new Set()
   );
 
   const toggleVersion = (version: string) => {
