@@ -31,10 +31,10 @@ npm run test:watch # Run tests in watch mode
 
 ## Project Structure
 
-- `src/lib/` — types, db, books CRUD, constants, open-library, scraper, backup, quotes
+- `src/lib/` — types, db, books CRUD, constants, open-library, backup, quotes, roadmap, changelog
 - `src/hooks/` — useBooks (Dexie live queries), useIsMobile
 - `src/components/` — reusable UI components
-- `src/app/` — routes: `/`, `/add/*`, `/book/[id]`, `/settings`, `/api/scrape`, `/~offline`
+- `src/app/` — routes: `/`, `/add/*`, `/book/[id]`, `/settings`, `/~offline`
 - `src/app/sw.ts` — service worker (excluded from tsconfig, compiled by Serwist CLI)
 
 ## Testing

@@ -44,7 +44,6 @@ src/
 │   ├── add/               # Add book (manual, scan, search)
 │   ├── book/[id]/         # Book detail & edit
 │   ├── settings/          # Settings & backup
-│   ├── api/scrape/        # Server-side metadata scraper
 │   └── ~offline/          # Offline fallback page
 ├── components/    # Reusable UI components
 ├── hooks/         # Custom React hooks (useBooks, useIsMobile)
