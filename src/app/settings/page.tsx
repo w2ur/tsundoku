@@ -1,5 +1,6 @@
 "use client";
 
+import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ExportButton from "@/components/ExportButton";
 import ImportButton from "@/components/ImportButton";
@@ -73,21 +74,10 @@ export default function SettingsPage() {
               </svg>
               GitHub
             </a>
-            <span className="text-xs text-forest/30">v2.0</span>
           </div>
         </section>
       </main>
-      <footer className="py-4 text-center text-xs text-forest/30">
-        Made with care by{" "}
-        <a
-          href="https://william.revah.paris"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-forest/50 transition-colors"
-        >
-          William
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
