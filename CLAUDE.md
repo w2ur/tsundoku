@@ -64,3 +64,4 @@ AGPL-3.0-only. Commercial licensing available — contact w@revah.paris.
 - Dexie SSR guard: `typeof window !== 'undefined'`
 - Theme colors: paper `#FAF8F5`, forest `#2D4A3E`, amber `#C4956A`, cream `#F5F0EB`
 - Fonts: Playfair Display (serif), Inter (sans)
+- Bump the version in `package.json` (semver) when a commit changes user-facing behavior. Add a matching entry in `src/lib/changelog.ts`. Internal changes (refactors, tests, docs) don't trigger a bump.
