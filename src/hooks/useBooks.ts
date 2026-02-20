@@ -8,7 +8,7 @@ export function useBooks(stage?: Stage): Book[] | undefined {
   return useLiveQuery(() => {
     if (!db) return [];
     if (stage) {
-      return db.books.where("stage").equals(stage).sortBy("updatedAt");
+      return db.books.where("stage").equals(stage).sortBy("position");
     }
     return db.books.orderBy("updatedAt").reverse().toArray();
   }, [stage]);
@@ -33,6 +33,9 @@ export function useBooksByStage(): Record<Stage, Book[]> | undefined {
     };
     for (const book of all) {
       result[book.stage].push(book);
+    }
+    for (const stage of Object.keys(result) as Stage[]) {
+      result[stage].sort((a, b) => a.position - b.position);
     }
     return result;
   }, []);
