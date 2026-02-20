@@ -40,6 +40,15 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   const isMobile = useIsMobile();
 
   const preSearchTab = useRef<Stage | null>(null);
+  const autoSwitched = useRef(false);
+
+  const handleTabChange = useCallback(
+    (stage: Stage) => {
+      autoSwitched.current = false;
+      setActiveTab(stage);
+    },
+    [setActiveTab]
+  );
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -50,6 +59,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
       if (preSearchTab.current) {
         setActiveTab(preSearchTab.current);
         preSearchTab.current = null;
+        autoSwitched.current = false;
       }
     }
   }, [searchQuery, activeTab, setActiveTab]);
@@ -72,8 +82,18 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
 
   useEffect(() => {
     if (!isMobile || !filteredByStage || !searchQuery.trim()) return;
+
+    // If we auto-switched away and original tab now has results, snap back
+    if (autoSwitched.current && preSearchTab.current && filteredByStage[preSearchTab.current].length > 0) {
+      autoSwitched.current = false;
+      setActiveTab(preSearchTab.current);
+      return;
+    }
+
+    // If current tab has results, stay
     if (filteredByStage[activeTab].length > 0) return;
 
+    // Current tab empty — find the tab with the most matches
     let bestStage: Stage | null = null;
     let bestCount = 0;
     for (const stage of STAGES) {
@@ -84,6 +104,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
       }
     }
     if (bestStage) {
+      autoSwitched.current = true;
       setActiveTab(bestStage);
     }
   }, [filteredByStage, searchQuery, activeTab, isMobile, setActiveTab]);
@@ -119,7 +140,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     const books = filteredByStage[activeTab];
     return (
       <div className="flex flex-col h-[calc(100vh-65px)]">
-        <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} searchActive={Boolean(searchQuery.trim())} />
+        <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={Boolean(searchQuery.trim())} />
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {books.length === 0 ? (
             searchQuery.trim() ? (
