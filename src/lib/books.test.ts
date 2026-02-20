@@ -30,7 +30,7 @@ vi.mock("uuid", () => ({
   v4: () => "mock-uuid-1234",
 }));
 
-import { addBook, getBook, updateBookStage, updateBook, deleteBook, getAllBooks, importBooks } from "./books";
+import { addBook, getBook, updateBookStage, updateBook, deleteBook, getAllBooks, importBooks, computeReorder } from "./books";
 import type { Book } from "./types";
 
 beforeEach(() => {
@@ -181,5 +181,27 @@ describe("importBooks", () => {
 
     expect(mockClear).not.toHaveBeenCalled();
     expect(mockBulkPut).toHaveBeenCalledWith(mockBooks);
+  });
+});
+
+describe("computeReorder", () => {
+  it("moves item forward in list", () => {
+    expect(computeReorder(["a", "b", "c"], "a", 2)).toEqual(["b", "c", "a"]);
+  });
+
+  it("moves item to top", () => {
+    expect(computeReorder(["a", "b", "c"], "c", 0)).toEqual(["c", "a", "b"]);
+  });
+
+  it("inserts item not in list", () => {
+    expect(computeReorder(["a", "b"], "c", 1)).toEqual(["a", "c", "b"]);
+  });
+
+  it("handles empty list", () => {
+    expect(computeReorder([], "a", 0)).toEqual(["a"]);
+  });
+
+  it("no-ops when position unchanged", () => {
+    expect(computeReorder(["a", "b", "c"], "b", 1)).toEqual(["a", "b", "c"]);
   });
 });

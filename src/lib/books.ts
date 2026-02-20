@@ -69,3 +69,13 @@ export async function importBooks(
   }
   await db.books.bulkPut(books);
 }
+
+export function computeReorder(
+  orderedIds: string[],
+  movedId: string,
+  targetIndex: number
+): string[] {
+  const result = orderedIds.filter((id) => id !== movedId);
+  result.splice(targetIndex, 0, movedId);
+  return result;
+}
