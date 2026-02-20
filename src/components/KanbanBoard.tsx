@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
@@ -55,6 +55,24 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     return result;
   }, [booksByStage, searchQuery]);
 
+  useEffect(() => {
+    if (!isMobile || !filteredByStage || !searchQuery.trim()) return;
+    if (filteredByStage[activeTab].length > 0) return;
+
+    let bestStage: Stage | null = null;
+    let bestCount = 0;
+    for (const stage of STAGES) {
+      const count = filteredByStage[stage].length;
+      if (count > bestCount) {
+        bestCount = count;
+        bestStage = stage;
+      }
+    }
+    if (bestStage) {
+      setActiveTab(bestStage);
+    }
+  }, [filteredByStage, searchQuery, activeTab, isMobile, setActiveTab]);
+
   const uniqueQuotes = useMemo(() => {
     const quotes = getUniqueQuotes(STAGES.length);
     return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
@@ -86,7 +104,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     const books = filteredByStage[activeTab];
     return (
       <div className="flex flex-col h-[calc(100vh-65px)]">
-        <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} />
+        <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} searchActive={Boolean(searchQuery.trim())} />
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {books.length === 0 ? (
             searchQuery.trim() ? (
