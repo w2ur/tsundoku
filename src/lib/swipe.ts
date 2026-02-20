@@ -20,3 +20,9 @@ export function shouldConfirm(offset: number, cardWidth: number): boolean {
   const { fullConfirm } = getSwipeThresholds(cardWidth);
   return Math.abs(offset) >= fullConfirm;
 }
+
+export function vibrate(ms: number): void {
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate(ms);
+  }
+}

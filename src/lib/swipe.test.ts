@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { getSwipeThresholds, shouldConfirm } from "./swipe";
+import { describe, it, expect, vi } from "vitest";
+import { getSwipeThresholds, shouldConfirm, vibrate } from "./swipe";
 
 describe("getSwipeThresholds", () => {
   it("computes thresholds from card width", () => {
@@ -33,5 +33,27 @@ describe("shouldConfirm", () => {
   it("works with negative offsets (left swipe)", () => {
     expect(shouldConfirm(-260, 320)).toBe(true);
     expect(shouldConfirm(-100, 320)).toBe(false);
+  });
+});
+
+describe("vibrate", () => {
+  it("calls navigator.vibrate when available", () => {
+    const mockVibrate = vi.fn();
+    Object.defineProperty(navigator, "vibrate", {
+      value: mockVibrate,
+      writable: true,
+      configurable: true,
+    });
+    vibrate(10);
+    expect(mockVibrate).toHaveBeenCalledWith(10);
+  });
+
+  it("does not throw when navigator.vibrate is unavailable", () => {
+    Object.defineProperty(navigator, "vibrate", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    expect(() => vibrate(10)).not.toThrow();
   });
 });
