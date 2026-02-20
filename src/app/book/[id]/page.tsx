@@ -81,7 +81,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     fill
                     className="object-cover"
                     sizes="160px"
-                    unoptimized={book.coverUrl.startsWith("data:")}
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

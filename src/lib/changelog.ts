@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.2.2",
+    date: "2026-02-20",
+    changes: [
+      "Correction de l'affichage des couvertures ajoutées par URL",
+    ],
+  },
+  {
     version: "1.2.1",
     date: "2026-02-20",
     changes: [

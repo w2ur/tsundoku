@@ -64,7 +64,7 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
                 fill
                 className="object-cover"
                 sizes="56px"
-                unoptimized={book.coverUrl.startsWith("data:")}
+                unoptimized
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
