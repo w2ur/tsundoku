@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.4.0",
+    date: "2026-02-20",
+    changes: [
+      "Réorganisation des livres par glisser-déposer dans chaque colonne",
+      "Les livres déplacés arrivent en haut de la pile",
+    ],
+  },
+  {
     version: "1.3.0",
     date: "2026-02-20",
     changes: [
