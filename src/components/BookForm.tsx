@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import OpenLibraryAutocomplete from "./OpenLibraryAutocomplete";
-import type { OpenLibraryResult } from "@/lib/open-library";
+import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
 
 export interface BookFormData {
   title: string;
@@ -16,15 +16,20 @@ interface Props {
   initial?: Partial<BookFormData>;
   onSubmit: (data: BookFormData) => void;
   submitLabel?: string;
+  mode?: "add" | "edit";
 }
 
-export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }: Props) {
+export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", mode = "add" }: Props) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [author, setAuthor] = useState(initial?.author ?? "");
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [storeUrl, setStoreUrl] = useState(initial?.storeUrl ?? "");
   const [noResults, setNoResults] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -61,6 +66,24 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
     setNoResults(empty);
   }
 
+  async function handleEditSearch() {
+    if (!searchQuery || searchQuery.length < 2) return;
+    setSearchLoading(true);
+    const results = await searchBooks(searchQuery, author);
+    setSearchResults(results);
+    setSearchLoading(false);
+  }
+
+  function handleSearchSelect(result: OpenLibraryResult) {
+    setTitle(result.title);
+    setAuthor(result.author);
+    if (result.coverUrl) setCoverUrl(result.coverUrl);
+    setShowSearchModal(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setNoResults(false);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
@@ -78,12 +101,36 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <OpenLibraryAutocomplete
-        value={title}
-        onChange={setTitle}
-        onSelect={handleAutocompleteSelect}
-        onNoResults={handleNoResults}
-      />
+      {mode === "add" ? (
+        <OpenLibraryAutocomplete
+          value={title}
+          onChange={setTitle}
+          onSelect={handleAutocompleteSelect}
+          onNoResults={handleNoResults}
+          author={author}
+        />
+      ) : (
+        <div>
+          <label className="block text-sm font-medium text-forest/70 mb-1">Titre</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titre du livre"
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery(title);
+              setShowSearchModal(true);
+            }}
+            className="mt-1 text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+          >
+            Rechercher sur Open Library
+          </button>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">Auteur</label>
@@ -194,6 +241,63 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
       >
         {submitLabel}
       </button>
+
+      {showSearchModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30" onClick={() => setShowSearchModal(false)}>
+          <div
+            className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-4 max-h-[70vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-forest mb-3">Rechercher sur Open Library</h3>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleEditSearch())}
+                placeholder="Titre du livre..."
+                className={inputClass}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={handleEditSearch}
+                disabled={searchLoading || searchQuery.length < 2}
+                className="flex-shrink-0 px-3 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-40 transition-colors"
+              >
+                {searchLoading ? "..." : "Chercher"}
+              </button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="space-y-1">
+                {searchResults.map((result, i) => (
+                  <button
+                    key={`${result.title}-${i}`}
+                    type="button"
+                    onClick={() => handleSearchSelect(result)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-cream rounded-lg transition-colors"
+                  >
+                    {result.coverUrl ? (
+                      <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded" />
+                    ) : (
+                      <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center">
+                        <span className="text-forest/20 text-xs">?</span>
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-ink truncate">{result.title}</p>
+                      <p className="text-xs text-forest/50 truncate">{result.author}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchResults.length === 0 && !searchLoading && searchQuery.length >= 2 && (
+              <p className="text-xs text-forest/40 text-center py-4">Aucun résultat</p>
+            )}
+          </div>
+        </div>
+      )}
     </form>
   );
 }
