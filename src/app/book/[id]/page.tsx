@@ -63,7 +63,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 }}
                 onSubmit={handleSave}
                 submitLabel="Enregistrer"
-                mode="edit"
               />
               <button
                 onClick={() => setEditing(false)}

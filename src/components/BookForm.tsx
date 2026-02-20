@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import OpenLibraryAutocomplete from "./OpenLibraryAutocomplete";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
 
 export interface BookFormData {
@@ -16,20 +15,17 @@ interface Props {
   initial?: Partial<BookFormData>;
   onSubmit: (data: BookFormData) => void;
   submitLabel?: string;
-  mode?: "add" | "edit";
 }
 
-export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", mode = "add" }: Props) {
+export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }: Props) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [author, setAuthor] = useState(initial?.author ?? "");
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [storeUrl, setStoreUrl] = useState(initial?.storeUrl ?? "");
-  const [noResults, setNoResults] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -55,33 +51,21 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", m
     reader.readAsDataURL(file);
   }
 
-  function handleAutocompleteSelect(result: OpenLibraryResult) {
-    setTitle(result.title);
-    setAuthor(result.author);
-    if (result.coverUrl) setCoverUrl(result.coverUrl);
-    setNoResults(false);
-  }
-
-  function handleNoResults(empty: boolean) {
-    setNoResults(empty);
-  }
-
-  async function handleEditSearch() {
-    if (!searchQuery || searchQuery.length < 2) return;
+  async function handleSearch() {
+    if (!title || title.length < 2) return;
     setSearchLoading(true);
-    const results = await searchBooks(searchQuery, author);
+    setHasSearched(true);
+    const results = await searchBooks(title, author);
     setSearchResults(results);
     setSearchLoading(false);
   }
 
-  function handleSearchSelect(result: OpenLibraryResult) {
+  function handleResultSelect(result: OpenLibraryResult) {
     setTitle(result.title);
     setAuthor(result.author);
     if (result.coverUrl) setCoverUrl(result.coverUrl);
-    setShowSearchModal(false);
-    setSearchQuery("");
     setSearchResults([]);
-    setNoResults(false);
+    setHasSearched(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -101,35 +85,73 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", m
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {mode === "add" ? (
-        <OpenLibraryAutocomplete
-          value={title}
-          onChange={setTitle}
-          onSelect={handleAutocompleteSelect}
-          onNoResults={handleNoResults}
-          author={author}
-        />
-      ) : (
-        <div>
-          <label className="block text-sm font-medium text-forest/70 mb-1">Titre</label>
+      <div>
+        <label className="block text-sm font-medium text-forest/70 mb-1">Titre</label>
+        <div className="flex gap-2">
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setHasSearched(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
             placeholder="Titre du livre"
             className={inputClass}
           />
           <button
             type="button"
-            onClick={() => {
-              setSearchQuery(title);
-              setShowSearchModal(true);
-            }}
-            className="mt-1 text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+            onClick={handleSearch}
+            disabled={searchLoading || title.length < 2}
+            className="flex-shrink-0 px-3 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Rechercher sur Open Library
+            {searchLoading ? "..." : "Rechercher"}
           </button>
         </div>
+      </div>
+
+      {searchResults.length > 0 && (
+        <div className="space-y-1 border border-forest/10 rounded-lg overflow-hidden">
+          {searchResults.map((result, i) => (
+            <button
+              key={`${result.title}-${i}`}
+              type="button"
+              onClick={() => handleResultSelect(result)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-cream transition-colors border-b border-forest/5 last:border-b-0"
+            >
+              {result.coverUrl ? (
+                <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded flex-shrink-0" />
+              ) : (
+                <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center flex-shrink-0">
+                  <span className="text-forest/20 text-xs">?</span>
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink truncate">{result.title}</p>
+                <p className="text-xs text-forest/50 truncate">{result.author}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {hasSearched && !searchLoading && searchResults.length === 0 && (
+        <p className="text-xs text-forest/40 text-center">
+          Aucun résultat sur Open Library.{" "}
+          <a
+            href="https://openlibrary.org/books/add"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-forest/60"
+          >
+            Ajoutez-le
+          </a>
+        </p>
       )}
 
       <div>
@@ -220,20 +242,6 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", m
         />
       </div>
 
-      {noResults && title.length >= 3 && (
-        <p className="text-xs text-forest/40 text-center">
-          Livre introuvable sur OpenLibrary ?{" "}
-          <a
-            href="https://openlibrary.org/books/add"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-forest/60"
-          >
-            Ajoutez-le
-          </a>
-        </p>
-      )}
-
       <button
         type="submit"
         disabled={!title.trim()}
@@ -241,63 +249,6 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter", m
       >
         {submitLabel}
       </button>
-
-      {showSearchModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30" onClick={() => setShowSearchModal(false)}>
-          <div
-            className="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-4 max-h-[70vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-sm font-semibold text-forest mb-3">Rechercher sur Open Library</h3>
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleEditSearch())}
-                placeholder="Titre du livre..."
-                className={inputClass}
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={handleEditSearch}
-                disabled={searchLoading || searchQuery.length < 2}
-                className="flex-shrink-0 px-3 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-40 transition-colors"
-              >
-                {searchLoading ? "..." : "Chercher"}
-              </button>
-            </div>
-            {searchResults.length > 0 && (
-              <div className="space-y-1">
-                {searchResults.map((result, i) => (
-                  <button
-                    key={`${result.title}-${i}`}
-                    type="button"
-                    onClick={() => handleSearchSelect(result)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-cream rounded-lg transition-colors"
-                  >
-                    {result.coverUrl ? (
-                      <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded" />
-                    ) : (
-                      <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center">
-                        <span className="text-forest/20 text-xs">?</span>
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-ink truncate">{result.title}</p>
-                      <p className="text-xs text-forest/50 truncate">{result.author}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            {searchResults.length === 0 && !searchLoading && searchQuery.length >= 2 && (
-              <p className="text-xs text-forest/40 text-center py-4">Aucun résultat</p>
-            )}
-          </div>
-        </div>
-      )}
     </form>
   );
 }

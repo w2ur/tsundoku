@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
+import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 
 const methods = [
   {
@@ -31,7 +32,34 @@ const methods = [
 
 export default function AddPage() {
   const searchParams = useSearchParams();
-  const stage = searchParams.get("stage") || "tsundoku";
+  const stage = searchParams.get("stage");
+
+  if (!stage) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 px-4 py-8 max-w-lg mx-auto w-full">
+          <h1 className="font-serif text-2xl text-forest mb-6">Ajouter un livre</h1>
+          <p className="text-sm text-forest/50 mb-4">Dans quelle étape ?</p>
+          <div className="grid grid-cols-2 gap-3">
+            {STAGES.map((s) => {
+              const config = STAGE_CONFIG[s];
+              return (
+                <Link
+                  key={s}
+                  href={`/add?stage=${s}`}
+                  className="flex flex-col items-center gap-2 p-4 bg-white border border-forest/8 rounded-xl hover:border-forest/15 hover:shadow-sm transition-all"
+                >
+                  <span className="text-2xl">{config.emoji}</span>
+                  <span className="text-sm font-medium text-ink text-center">{config.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

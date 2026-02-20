@@ -5,11 +5,12 @@ import { useSearchParams } from "next/navigation";
 
 export default function AddButton() {
   const searchParams = useSearchParams();
-  const stage = searchParams.get("stage") || "tsundoku";
+  const stage = searchParams.get("stage");
+  const href = stage ? `/add?stage=${stage}` : "/add";
 
   return (
     <Link
-      href={`/add?stage=${stage}`}
+      href={href}
       className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-forest text-paper shadow-lg hover:bg-forest/90 active:scale-95 transition-all"
       aria-label="Ajouter un livre"
     >
