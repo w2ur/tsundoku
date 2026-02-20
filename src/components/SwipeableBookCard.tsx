@@ -51,7 +51,8 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
       >
         <Link
           href={`/book/${book.id}`}
-          className="group flex gap-3 p-3 rounded-xl bg-white border border-forest/5 shadow-sm"
+          className="group flex gap-3 p-3 rounded-xl bg-white border border-forest/5 shadow-sm select-none"
+          style={{ WebkitTouchCallout: "none" }}
           onClick={(e) => {
             if (Math.abs(x.get()) > 5) e.preventDefault();
           }}

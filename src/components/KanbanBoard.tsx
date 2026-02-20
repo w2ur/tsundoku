@@ -172,27 +172,9 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className="flex items-center gap-2"
+                          {...provided.dragHandleProps}
                         >
-                          {!isSearching && (
-                            <div
-                              {...provided.dragHandleProps}
-                              className="touch-none flex-shrink-0 p-1 text-forest/30"
-                              aria-label="Réordonner"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="9" cy="5" r="1.5" />
-                                <circle cx="15" cy="5" r="1.5" />
-                                <circle cx="9" cy="12" r="1.5" />
-                                <circle cx="15" cy="12" r="1.5" />
-                                <circle cx="9" cy="19" r="1.5" />
-                                <circle cx="15" cy="19" r="1.5" />
-                              </svg>
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <SwipeableBookCard book={book} />
-                          </div>
+                          <SwipeableBookCard book={book} />
                         </div>
                       )}
                     </Draggable>
