@@ -19,6 +19,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -31,6 +32,9 @@ Thumbs.db
 
 # backup exports
 *.backup.json
+*.bak
+*.dump
+*.sql
 
 # plan files
 docs/plans/
