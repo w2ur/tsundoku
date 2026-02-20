@@ -1,7 +1,7 @@
 "use client";
 
 import { STAGE_TRANSITIONS } from "@/lib/constants";
-import { updateBookStage } from "@/lib/books";
+import { moveBookToPosition } from "@/lib/books";
 import type { Stage } from "@/lib/types";
 
 interface Props {
@@ -14,7 +14,7 @@ export default function StageActions({ bookId, stage, onMoved }: Props) {
   const transitions = STAGE_TRANSITIONS[stage];
 
   async function handleMove(nextStage: Stage) {
-    await updateBookStage(bookId, nextStage);
+    await moveBookToPosition(bookId, nextStage, 0);
     onMoved?.();
   }
 

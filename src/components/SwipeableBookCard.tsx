@@ -5,7 +5,7 @@ import { motion, useMotionValue, useTransform, type PanInfo } from "motion/react
 import Link from "next/link";
 import Image from "next/image";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
-import { updateBookStage } from "@/lib/books";
+import { moveBookToPosition } from "@/lib/books";
 import type { Book, Stage } from "@/lib/types";
 
 const SWIPE_THRESHOLD = 80;
@@ -25,9 +25,9 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
   async function handleDragEnd(_: unknown, info: PanInfo) {
     const offset = info.offset.x;
     if (offset > SWIPE_THRESHOLD && nextStage) {
-      await updateBookStage(book.id, nextStage);
+      await moveBookToPosition(book.id, nextStage, 0);
     } else if (offset < -SWIPE_THRESHOLD && prevStage) {
-      await updateBookStage(book.id, prevStage);
+      await moveBookToPosition(book.id, prevStage, 0);
     }
   }
 
