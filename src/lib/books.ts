@@ -79,3 +79,61 @@ export function computeReorder(
   result.splice(targetIndex, 0, movedId);
   return result;
 }
+
+export async function moveBookToPosition(
+  bookId: string,
+  targetStage: Stage,
+  targetIndex: number
+): Promise<void> {
+  const allBooks = await db.books.toArray();
+  const book = allBooks.find((b) => b.id === bookId);
+  if (!book) return;
+
+  const sourceStage = book.stage;
+  const now = Date.now();
+
+  // Get books in target stage sorted by position
+  const targetBooks = allBooks
+    .filter((b) => b.stage === targetStage)
+    .sort((a, b) => a.position - b.position);
+
+  const targetIds = targetBooks.map((b) => b.id);
+  const newTargetOrder = computeReorder(targetIds, bookId, targetIndex);
+
+  // Build updates for target column
+  const updates: Promise<unknown>[] = [];
+
+  for (let i = 0; i < newTargetOrder.length; i++) {
+    const id = newTargetOrder[i];
+    if (id === bookId) {
+      // The moved book: update stage (if changed) + position + updatedAt
+      updates.push(
+        db.books.update(id, {
+          ...(sourceStage !== targetStage && { stage: targetStage }),
+          position: i,
+          updatedAt: now,
+        })
+      );
+    } else {
+      // Other books: only update if position actually changed
+      const existing = targetBooks.find((b) => b.id === id);
+      if (existing && existing.position !== i) {
+        updates.push(db.books.update(id, { position: i }));
+      }
+    }
+  }
+
+  // If cross-column move, renumber source column
+  if (sourceStage !== targetStage) {
+    const sourceBooks = allBooks
+      .filter((b) => b.stage === sourceStage && b.id !== bookId)
+      .sort((a, b) => a.position - b.position);
+    for (let i = 0; i < sourceBooks.length; i++) {
+      if (sourceBooks[i].position !== i) {
+        updates.push(db.books.update(sourceBooks[i].id, { position: i }));
+      }
+    }
+  }
+
+  await Promise.all(updates);
+}

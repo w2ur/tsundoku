@@ -30,8 +30,19 @@ vi.mock("uuid", () => ({
   v4: () => "mock-uuid-1234",
 }));
 
-import { addBook, getBook, updateBookStage, updateBook, deleteBook, getAllBooks, importBooks, computeReorder } from "./books";
+import { addBook, getBook, updateBookStage, updateBook, deleteBook, getAllBooks, importBooks, computeReorder, moveBookToPosition } from "./books";
 import type { Book } from "./types";
+
+function makeBook(overrides: Partial<Book> & { id: string; stage: Book["stage"]; position: number }): Book {
+  return {
+    title: "Book",
+    author: "Author",
+    coverUrl: "",
+    createdAt: 1000,
+    updatedAt: 1000,
+    ...overrides,
+  } as Book;
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -203,5 +214,52 @@ describe("computeReorder", () => {
 
   it("no-ops when position unchanged", () => {
     expect(computeReorder(["a", "b", "c"], "b", 1)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("moveBookToPosition", () => {
+  it("reorders within same column", async () => {
+    const books = [
+      makeBook({ id: "a", stage: "tsundoku", position: 0 }),
+      makeBook({ id: "b", stage: "tsundoku", position: 1 }),
+      makeBook({ id: "c", stage: "tsundoku", position: 2 }),
+    ];
+    mockToArray.mockResolvedValue(books);
+    mockUpdate.mockResolvedValue(undefined);
+
+    await moveBookToPosition("c", "tsundoku", 0);
+
+    expect(mockUpdate).toHaveBeenCalledWith("c", { position: 0, updatedAt: expect.any(Number) });
+    expect(mockUpdate).toHaveBeenCalledWith("a", { position: 1 });
+    expect(mockUpdate).toHaveBeenCalledWith("b", { position: 2 });
+  });
+
+  it("moves book to top of different column", async () => {
+    const books = [
+      makeBook({ id: "a", stage: "tsundoku", position: 0 }),
+      makeBook({ id: "b", stage: "tsundoku", position: 1 }),
+      makeBook({ id: "c", stage: "bibliotheque", position: 0 }),
+    ];
+    mockToArray.mockResolvedValue(books);
+    mockUpdate.mockResolvedValue(undefined);
+
+    await moveBookToPosition("a", "bibliotheque", 0);
+
+    // a moves to bibliotheque at position 0
+    expect(mockUpdate).toHaveBeenCalledWith("a", {
+      stage: "bibliotheque",
+      position: 0,
+      updatedAt: expect.any(Number),
+    });
+    // c shifts to position 1 in bibliotheque
+    expect(mockUpdate).toHaveBeenCalledWith("c", { position: 1 });
+    // b becomes position 0 in tsundoku (was 1, now fills gap)
+    expect(mockUpdate).toHaveBeenCalledWith("b", { position: 0 });
+  });
+
+  it("does nothing if book not found", async () => {
+    mockToArray.mockResolvedValue([]);
+    await moveBookToPosition("nonexistent", "tsundoku", 0);
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 });
