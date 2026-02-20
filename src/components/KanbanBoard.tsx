@@ -6,7 +6,7 @@ import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { updateBookStage } from "@/lib/books";
+import { moveBookToPosition } from "@/lib/books";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import type { Stage, Book } from "@/lib/types";
 import { matchesSearch } from "@/lib/search";
@@ -114,12 +114,21 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
   }, []);
 
-  const handleDragEnd = useCallback(async (result: DropResult) => {
-    const { draggableId, destination } = result;
-    if (!destination) return;
-    const newStage = destination.droppableId as Stage;
-    await updateBookStage(draggableId, newStage);
-  }, []);
+  const handleDragEnd = useCallback(
+    async (result: DropResult) => {
+      if (searchQuery.trim()) return;
+      const { draggableId, source, destination } = result;
+      if (!destination) return;
+      if (
+        source.droppableId === destination.droppableId &&
+        source.index === destination.index
+      )
+        return;
+      const targetStage = destination.droppableId as Stage;
+      await moveBookToPosition(draggableId, targetStage, destination.index);
+    },
+    [searchQuery]
+  );
 
   if (!filteredByStage) {
     return (
