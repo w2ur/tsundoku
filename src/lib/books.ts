@@ -41,10 +41,6 @@ export async function getBook(id: string): Promise<Book | undefined> {
   return db.books.get(id);
 }
 
-export async function updateBookStage(id: string, stage: Stage): Promise<void> {
-  await db.books.update(id, { stage, updatedAt: Date.now() });
-}
-
 export async function updateBook(
   id: string,
   data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl" | "isbn">>
@@ -64,14 +60,35 @@ export async function exportBooks(): Promise<Book[]> {
   return db.books.toArray();
 }
 
+export function ensurePositions(books: Book[]): Book[] {
+  const needsAssignment = books.some((b) => b.position == null);
+  if (!needsAssignment) return books;
+
+  const byStage: Record<string, Book[]> = {};
+  for (const book of books) {
+    if (!byStage[book.stage]) byStage[book.stage] = [];
+    byStage[book.stage].push(book);
+  }
+
+  const result: Book[] = [];
+  for (const stageBooks of Object.values(byStage)) {
+    stageBooks.sort((a, b) => b.updatedAt - a.updatedAt);
+    stageBooks.forEach((book, i) => {
+      result.push({ ...book, position: book.position ?? i });
+    });
+  }
+  return result;
+}
+
 export async function importBooks(
   books: Book[],
   mode: "merge" | "replace"
 ): Promise<void> {
+  const booksWithPosition = ensurePositions(books);
   if (mode === "replace") {
     await db.books.clear();
   }
-  await db.books.bulkPut(books);
+  await db.books.bulkPut(booksWithPosition);
 }
 
 export function computeReorder(

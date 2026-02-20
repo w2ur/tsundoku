@@ -30,7 +30,7 @@ vi.mock("uuid", () => ({
   v4: () => "mock-uuid-1234",
 }));
 
-import { addBook, getBook, updateBookStage, updateBook, deleteBook, getAllBooks, importBooks, computeReorder, moveBookToPosition } from "./books";
+import { addBook, getBook, updateBook, deleteBook, getAllBooks, importBooks, computeReorder, moveBookToPosition, ensurePositions } from "./books";
 import type { Book } from "./types";
 
 function makeBook(overrides: Partial<Book> & { id: string; stage: Book["stage"]; position: number }): Book {
@@ -108,19 +108,6 @@ describe("addBook", () => {
   });
 });
 
-describe("updateBookStage", () => {
-  it("updates stage and updatedAt", async () => {
-    mockUpdate.mockResolvedValue(undefined);
-
-    await updateBookStage("id-1", "bibliotheque");
-
-    expect(mockUpdate).toHaveBeenCalledWith("id-1", {
-      stage: "bibliotheque",
-      updatedAt: expect.any(Number),
-    });
-  });
-});
-
 describe("updateBook", () => {
   it("updates provided fields and updatedAt", async () => {
     mockUpdate.mockResolvedValue(undefined);
@@ -188,6 +175,7 @@ describe("importBooks", () => {
     await importBooks(mockBooks, "replace");
 
     expect(mockClear).toHaveBeenCalled();
+    // books already have positions, ensurePositions passes them through unchanged
     expect(mockBulkPut).toHaveBeenCalledWith(mockBooks);
   });
 
@@ -197,7 +185,35 @@ describe("importBooks", () => {
     await importBooks(mockBooks, "merge");
 
     expect(mockClear).not.toHaveBeenCalled();
+    // books already have positions, ensurePositions passes them through unchanged
     expect(mockBulkPut).toHaveBeenCalledWith(mockBooks);
+  });
+});
+
+describe("ensurePositions", () => {
+  it("assigns positions to books without them", () => {
+    const books = [
+      { id: "a", stage: "tsundoku" as const, title: "A", author: "X", coverUrl: "", createdAt: 1000, updatedAt: 3000 },
+      { id: "b", stage: "tsundoku" as const, title: "B", author: "X", coverUrl: "", createdAt: 1000, updatedAt: 1000 },
+      { id: "c", stage: "tsundoku" as const, title: "C", author: "X", coverUrl: "", createdAt: 1000, updatedAt: 2000 },
+    ] as Book[];
+
+    const result = ensurePositions(books);
+
+    // Sorted by updatedAt desc: a(3000)=0, c(2000)=1, b(1000)=2
+    expect(result.find(b => b.id === "a")!.position).toBe(0);
+    expect(result.find(b => b.id === "c")!.position).toBe(1);
+    expect(result.find(b => b.id === "b")!.position).toBe(2);
+  });
+
+  it("preserves existing positions", () => {
+    const books = [
+      makeBook({ id: "a", stage: "tsundoku", position: 5 }),
+      makeBook({ id: "b", stage: "tsundoku", position: 3 }),
+    ];
+    const result = ensurePositions(books);
+    expect(result.find(b => b.id === "a")!.position).toBe(5);
+    expect(result.find(b => b.id === "b")!.position).toBe(3);
   });
 });
 
