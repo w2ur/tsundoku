@@ -8,7 +8,8 @@ import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { updateBookStage } from "@/lib/books";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
-import type { Stage } from "@/lib/types";
+import type { Stage, Book } from "@/lib/types";
+import { matchesSearch } from "@/lib/search";
 import { getUniqueQuotes } from "@/lib/quotes";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
@@ -38,6 +39,22 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
 
+  const filteredByStage = useMemo(() => {
+    if (!booksByStage || !searchQuery.trim()) return booksByStage;
+    const result: Record<Stage, Book[]> = {
+      a_acheter: [],
+      tsundoku: [],
+      bibliotheque: [],
+      revendre: [],
+    };
+    for (const stage of STAGES) {
+      result[stage] = booksByStage[stage].filter((book) =>
+        matchesSearch(book, searchQuery)
+      );
+    }
+    return result;
+  }, [booksByStage, searchQuery]);
+
   const uniqueQuotes = useMemo(() => {
     const quotes = getUniqueQuotes(STAGES.length);
     return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
@@ -50,7 +67,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     await updateBookStage(draggableId, newStage);
   }, []);
 
-  if (!booksByStage) {
+  if (!filteredByStage) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-pulse text-forest/30 text-sm">Chargement...</div>
@@ -59,20 +76,24 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   }
 
   const counts = {
-    a_acheter: booksByStage.a_acheter.length,
-    tsundoku: booksByStage.tsundoku.length,
-    bibliotheque: booksByStage.bibliotheque.length,
-    revendre: booksByStage.revendre.length,
+    a_acheter: filteredByStage.a_acheter.length,
+    tsundoku: filteredByStage.tsundoku.length,
+    bibliotheque: filteredByStage.bibliotheque.length,
+    revendre: filteredByStage.revendre.length,
   };
 
   if (isMobile) {
-    const books = booksByStage[activeTab];
+    const books = filteredByStage[activeTab];
     return (
       <div className="flex flex-col h-[calc(100vh-65px)]">
         <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {books.length === 0 ? (
-            <EmptyState quote={uniqueQuotes[activeTab]} />
+            searchQuery.trim() ? (
+              <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
+            ) : (
+              <EmptyState quote={uniqueQuotes[activeTab]} />
+            )
           ) : (
             books.map((book) => <SwipeableBookCard key={book.id} book={book} />)
           )}
@@ -114,10 +135,14 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                   </Link>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
-                  {booksByStage[stage].length === 0 ? (
-                    <EmptyState quote={uniqueQuotes[stage]} />
+                  {filteredByStage[stage].length === 0 ? (
+                    searchQuery.trim() ? (
+                      <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
+                    ) : (
+                      <EmptyState quote={uniqueQuotes[stage]} />
+                    )
                   ) : (
-                    booksByStage[stage].map((book, index) => (
+                    filteredByStage[stage].map((book, index) => (
                       <Draggable key={book.id} draggableId={book.id} index={index}>
                         {(provided) => (
                           <div
