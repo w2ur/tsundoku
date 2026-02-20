@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Tsundoku is a French-language PWA for organizing personal book collections using a Kanban-style board. Users manage books across four stages: wishlist, unread pile (tsundoku), library, and to sell. Books can be added manually, via barcode scanning, or by searching Open Library.
+Tsundoku is a French-language PWA for organizing personal book collections using a Kanban-style board. Users manage books across four stages: wishlist, unread pile (tsundoku), library, and to sell. Books can be added manually or via barcode scanning (ISBN lookup via Open Library).
 
 ## Tech Stack
 
@@ -31,10 +31,10 @@ npm run test:watch # Run tests in watch mode
 
 ## Project Structure
 
-- `src/lib/` — types, db, books CRUD, constants, open-library, backup, quotes, roadmap, changelog
-- `src/hooks/` — useBooks (Dexie live queries), useIsMobile
+- `src/lib/` — types, db, books CRUD, constants, open-library, backup, quotes, roadmap, changelog, search, swipe
+- `src/hooks/` — useBooks, useBook, useBooksByStage (Dexie live queries), useIsMobile
 - `src/components/` — reusable UI components
-- `src/app/` — routes: `/`, `/add/*`, `/book/[id]`, `/settings`, `/~offline`
+- `src/app/` — routes: `/`, `/add/`, `/add/scan`, `/add/manual`, `/book/[id]`, `/settings`, `/~offline`
 - `src/app/sw.ts` — service worker (excluded from tsconfig, compiled by Serwist CLI)
 
 ## Testing
