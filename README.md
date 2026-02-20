@@ -41,7 +41,7 @@ npm run test:watch # watch mode
 src/
 ├── app/           # Next.js App Router pages
 │   ├── page.tsx           # Home — Kanban board
-│   ├── add/               # Add book (manual, scan, search)
+│   ├── add/               # Add book (manual entry, barcode scan)
 │   ├── book/[id]/         # Book detail & edit
 │   ├── settings/          # Settings & backup
 │   └── ~offline/          # Offline fallback page
