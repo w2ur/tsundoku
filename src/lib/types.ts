@@ -6,6 +6,7 @@ export interface Book {
   author: string;
   coverUrl: string;
   stage: Stage;
+  position: number;
   createdAt: number;
   updatedAt: number;
   notes?: string;

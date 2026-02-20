@@ -10,12 +10,19 @@ export async function addBook(
     isbn?: string;
   }
 ): Promise<Book> {
+  const stage = data.stage ?? "a_acheter";
+  const booksInStage = await db.books.where("stage").equals(stage).toArray();
+  const maxPosition = booksInStage.reduce(
+    (max, b) => Math.max(max, b.position ?? 0),
+    -1
+  );
   const book: Book = {
     id: uuidv4(),
     title: data.title,
     author: data.author,
     coverUrl: data.coverUrl,
-    stage: data.stage ?? "a_acheter",
+    stage,
+    position: maxPosition + 1,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     ...(data.notes && { notes: data.notes }),

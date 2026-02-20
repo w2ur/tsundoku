@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockAdd, mockGet, mockUpdate, mockDelete, mockClear, mockBulkPut, mockToArray } = vi.hoisted(() => ({
+const { mockAdd, mockGet, mockUpdate, mockDelete, mockClear, mockBulkPut, mockToArray, mockWhereToArray } = vi.hoisted(() => ({
   mockAdd: vi.fn(),
   mockGet: vi.fn(),
   mockUpdate: vi.fn(),
@@ -8,6 +8,7 @@ const { mockAdd, mockGet, mockUpdate, mockDelete, mockClear, mockBulkPut, mockTo
   mockClear: vi.fn(),
   mockBulkPut: vi.fn(),
   mockToArray: vi.fn(),
+  mockWhereToArray: vi.fn(),
 }));
 
 vi.mock("./db", () => ({
@@ -20,6 +21,7 @@ vi.mock("./db", () => ({
       clear: mockClear,
       bulkPut: mockBulkPut,
       toArray: mockToArray,
+      where: () => ({ equals: () => ({ toArray: mockWhereToArray }) }),
     },
   },
 }));
@@ -37,6 +39,7 @@ beforeEach(() => {
 
 describe("addBook", () => {
   it("creates a book with correct structure", async () => {
+    mockWhereToArray.mockResolvedValue([]);
     mockAdd.mockResolvedValue(undefined);
 
     const book = await addBook({
@@ -49,12 +52,14 @@ describe("addBook", () => {
     expect(book.title).toBe("Le Petit Prince");
     expect(book.author).toBe("Saint-Exupery");
     expect(book.stage).toBe("a_acheter");
+    expect(book.position).toBe(0);
     expect(book.createdAt).toBeTypeOf("number");
     expect(book.updatedAt).toBeTypeOf("number");
     expect(mockAdd).toHaveBeenCalledWith(book);
   });
 
   it("uses provided stage instead of default", async () => {
+    mockWhereToArray.mockResolvedValue([]);
     mockAdd.mockResolvedValue(undefined);
 
     const book = await addBook({
@@ -68,6 +73,7 @@ describe("addBook", () => {
   });
 
   it("includes optional fields when provided", async () => {
+    mockWhereToArray.mockResolvedValue([]);
     mockAdd.mockResolvedValue(undefined);
 
     const book = await addBook({
@@ -131,6 +137,7 @@ describe("getAllBooks", () => {
         author: "Author 1",
         coverUrl: "",
         stage: "tsundoku",
+        position: 0,
         createdAt: 1000,
         updatedAt: 1000,
       },
@@ -151,6 +158,7 @@ describe("importBooks", () => {
       author: "Author 1",
       coverUrl: "",
       stage: "tsundoku",
+      position: 0,
       createdAt: 1000,
       updatedAt: 1000,
     },
