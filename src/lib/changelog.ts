@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.1.0",
+    date: "2026-02-20",
+    changes: [
+      "Recherche Open Library plus compacte et moins intrusive",
+      "Mode édition : recherche Open Library optionnelle (plus de clics accidentels)",
+      "Le bouton + ajoute maintenant dans l'étape active",
+      "Retour automatique à l'étape d'origine après ajout d'un livre",
+    ],
+  },
+  {
     version: "1.0.0",
     date: "2026-02-18",
     changes: [
