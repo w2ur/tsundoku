@@ -32,6 +32,9 @@ Thumbs.db
 # backup exports
 *.backup.json
 
+# plan files
+docs/plans/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
