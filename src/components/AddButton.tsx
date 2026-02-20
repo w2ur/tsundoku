@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function AddButton() {
+  const searchParams = useSearchParams();
+  const stage = searchParams.get("stage") || "tsundoku";
+
   return (
     <Link
-      href="/add"
+      href={`/add?stage=${stage}`}
       className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-forest text-paper shadow-lg hover:bg-forest/90 active:scale-95 transition-all"
       aria-label="Ajouter un livre"
     >
