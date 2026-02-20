@@ -8,9 +8,11 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   onNoResults?: (empty: boolean) => void;
+  author?: string;
+  limit?: number;
 }
 
-export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onNoResults }: Props) {
+export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onNoResults, author, limit = 3 }: Props) {
   const [results, setResults] = useState<OpenLibraryResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onN
     }
     setLoading(true);
     debounceRef.current = setTimeout(async () => {
-      const data = await searchBooks(value);
+      const data = await searchBooks(value, author, limit);
       setResults(data);
       setIsOpen(data.length > 0);
       setLoading(false);
@@ -35,7 +37,7 @@ export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onN
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [value]);
+  }, [value, author]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -66,7 +68,7 @@ export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onN
         )}
       </div>
       {isOpen && (
-        <div className="absolute z-20 w-full mt-1 bg-white border border-forest/10 rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute z-20 w-full mt-1 bg-white border border-forest/10 rounded-lg shadow-lg overflow-y-auto max-h-36">
           {results.map((result, i) => (
             <button
               key={`${result.title}-${i}`}
@@ -75,19 +77,12 @@ export default function OpenLibraryAutocomplete({ onSelect, value, onChange, onN
                 onSelect(result);
                 setIsOpen(false);
               }}
-              className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-cream transition-colors"
+              className="w-full px-3 py-2 text-left hover:bg-cream transition-colors border-b border-forest/5 last:border-b-0"
             >
-              {result.coverUrl ? (
-                <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded" />
-              ) : (
-                <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center">
-                  <span className="text-forest/20 text-xs">?</span>
-                </div>
+              <p className="text-sm text-ink truncate">{result.title}</p>
+              {result.author && (
+                <p className="text-xs text-forest/40 truncate">{result.author}</p>
               )}
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-ink truncate">{result.title}</p>
-                <p className="text-xs text-forest/50 truncate">{result.author}</p>
-              </div>
             </button>
           ))}
         </div>
