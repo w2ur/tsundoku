@@ -1,52 +1,229 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useMotionValue, useTransform, type PanInfo } from "motion/react";
+import { useCallback, useRef, useState } from "react";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useAnimate,
+  type PanInfo,
+} from "motion/react";
 import Link from "next/link";
 import Image from "next/image";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import { moveBookToPosition } from "@/lib/books";
-import type { Book, Stage } from "@/lib/types";
+import { getSwipeThresholds, shouldConfirm, vibrate } from "@/lib/swipe";
+import type { Book } from "@/lib/types";
 
-const SWIPE_THRESHOLD = 80;
+type SwipePhase = "idle" | "dragging" | "peeking" | "confirmed";
+
+// Module-level: track which card is currently peeking so we dismiss it when another opens
+let activePeekingDismiss: (() => void) | null = null;
 
 export default function SwipeableBookCard({ book }: { book: Book }) {
+  const [phase, setPhase] = useState<SwipePhase>("idle");
   const x = useMotionValue(0);
-  const opacity = useTransform(x, [-150, 0, 150], [0.5, 1, 0.5]);
-  const constraintRef = useRef(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const cardWidthRef = useRef(0);
+  const [scope, animate] = useAnimate();
+  const swipeDirectionRef = useRef<"left" | "right" | null>(null);
+  const crossedRevealRef = useRef(false);
+  const crossedConfirmRef = useRef(false);
 
   const stageIndex = STAGES.indexOf(book.stage);
   const canSwipeRight = stageIndex < STAGES.length - 1;
   const canSwipeLeft = stageIndex > 0;
-
   const nextStage = canSwipeRight ? STAGES[stageIndex + 1] : null;
   const prevStage = canSwipeLeft ? STAGES[stageIndex - 1] : null;
 
-  async function handleDragEnd(_: unknown, info: PanInfo) {
-    const offset = info.offset.x;
-    if (offset > SWIPE_THRESHOLD && nextStage) {
-      await moveBookToPosition(book.id, nextStage, 0);
-    } else if (offset < -SWIPE_THRESHOLD && prevStage) {
-      await moveBookToPosition(book.id, prevStage, 0);
+  // Derived motion values for action area
+  const actionOpacity = useTransform(x, (latest) => {
+    if (cardWidthRef.current === 0) return 0;
+    const { deadZone, revealSnap } = getSwipeThresholds(cardWidthRef.current);
+    const abs = Math.abs(latest);
+    if (abs <= deadZone) return 0;
+    return Math.min((abs - deadZone) / (revealSnap - deadZone), 1);
+  });
+
+  const dismissToIdle = useCallback(() => {
+    setPhase("idle");
+    swipeDirectionRef.current = null;
+    crossedRevealRef.current = false;
+    crossedConfirmRef.current = false;
+    animate(scope.current, { x: 0 }, { type: "spring", stiffness: 300, damping: 30 });
+  }, [animate, scope]);
+
+  const confirmMove = useCallback(
+    async (direction: "left" | "right") => {
+      const target = direction === "right" ? nextStage : prevStage;
+      if (!target) return;
+
+      setPhase("confirmed");
+      const cardWidth = cardWidthRef.current || 320;
+      const exitX = direction === "right" ? cardWidth + 20 : -(cardWidth + 20);
+
+      await animate(
+        scope.current,
+        { x: exitX },
+        { type: "spring", stiffness: 300, damping: 30 }
+      );
+
+      await moveBookToPosition(book.id, target, 0);
+
+      // Reset after move
+      x.jump(0);
+      setPhase("idle");
+      swipeDirectionRef.current = null;
+      crossedRevealRef.current = false;
+      crossedConfirmRef.current = false;
+      activePeekingDismiss = null;
+    },
+    [animate, scope, book.id, nextStage, prevStage, x]
+  );
+
+  const handlePanStart = useCallback(() => {
+    // Measure card width on first pan
+    if (cardRef.current) {
+      cardWidthRef.current = cardRef.current.offsetWidth;
     }
-  }
+    // Dismiss any other peeking card
+    if (activePeekingDismiss) {
+      activePeekingDismiss();
+      activePeekingDismiss = null;
+    }
+    crossedRevealRef.current = false;
+    crossedConfirmRef.current = false;
+  }, []);
+
+  const handlePan = useCallback(
+    (_: PointerEvent, info: PanInfo) => {
+      const offset = info.offset.x;
+      const absOffset = Math.abs(offset);
+      const width = cardWidthRef.current;
+      if (width === 0) return;
+
+      const { deadZone, revealSnap, fullConfirm } = getSwipeThresholds(width);
+
+      // Still in dead zone — don't start
+      if (absOffset < deadZone) return;
+
+      // Lock swipe direction on first meaningful move
+      if (!swipeDirectionRef.current) {
+        const direction = offset > 0 ? "right" : "left";
+        // Check if this direction is allowed
+        if (direction === "right" && !canSwipeRight) return;
+        if (direction === "left" && !canSwipeLeft) return;
+        swipeDirectionRef.current = direction;
+        setPhase("dragging");
+      }
+
+      // Enforce direction lock: ignore movement in wrong direction
+      if (swipeDirectionRef.current === "right" && offset < 0) return;
+      if (swipeDirectionRef.current === "left" && offset > 0) return;
+
+      // Update card position
+      x.set(offset);
+
+      // Haptic at reveal threshold
+      if (absOffset >= revealSnap && !crossedRevealRef.current) {
+        crossedRevealRef.current = true;
+        vibrate(10);
+      }
+
+      // Haptic at confirm threshold
+      if (absOffset >= fullConfirm && !crossedConfirmRef.current) {
+        crossedConfirmRef.current = true;
+        vibrate(20);
+      }
+    },
+    [canSwipeRight, canSwipeLeft, x]
+  );
+
+  const handlePanEnd = useCallback(
+    (_: PointerEvent, info: PanInfo) => {
+      const direction = swipeDirectionRef.current;
+      if (!direction) {
+        // Never left the dead zone
+        dismissToIdle();
+        return;
+      }
+
+      const offset = Math.abs(info.offset.x);
+      const width = cardWidthRef.current;
+
+      // Full confirm: offset past 80%
+      if (shouldConfirm(info.offset.x, width)) {
+        confirmMove(direction);
+        return;
+      }
+
+      const { revealSnap } = getSwipeThresholds(width);
+
+      // Peeking: snap open at 30%
+      if (offset >= revealSnap) {
+        setPhase("peeking");
+        const snapX = direction === "right" ? revealSnap : -revealSnap;
+        animate(scope.current, { x: snapX }, { type: "spring", stiffness: 300, damping: 30 });
+        activePeekingDismiss = dismissToIdle;
+        return;
+      }
+
+      // Below reveal threshold: snap back
+      dismissToIdle();
+    },
+    [dismissToIdle, confirmMove, animate, scope]
+  );
+
+  const handleActionTap = useCallback(() => {
+    if (phase !== "peeking" || !swipeDirectionRef.current) return;
+    confirmMove(swipeDirectionRef.current);
+  }, [phase, confirmMove]);
+
+  const handleCardTap = useCallback(() => {
+    if (phase === "peeking") {
+      dismissToIdle();
+    }
+  }, [phase, dismissToIdle]);
+
+  // Determine which stage to show in the action area
+  const visibleTarget =
+    swipeDirectionRef.current === "right"
+      ? nextStage
+      : swipeDirectionRef.current === "left"
+        ? prevStage
+        : null;
 
   return (
-    <div ref={constraintRef} className="relative overflow-hidden rounded-xl">
-      {/* Swipe indicators */}
-      <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-start pl-3 text-xs text-forest/30">
-        {nextStage && <span>{STAGE_CONFIG[nextStage].emoji}</span>}
-      </div>
-      <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-end pr-3 text-xs text-forest/30">
-        {prevStage && <span>{STAGE_CONFIG[prevStage].emoji}</span>}
-      </div>
+    <div ref={cardRef} className="relative overflow-hidden rounded-xl">
+      {/* Action area — revealed behind the card */}
+      {visibleTarget && (phase === "dragging" || phase === "peeking") && (
+        <motion.div
+          className={`absolute inset-0 flex items-center rounded-xl ${STAGE_CONFIG[visibleTarget].bgColor} ${
+            swipeDirectionRef.current === "right" ? "justify-start pl-4" : "justify-end pr-4"
+          }`}
+          style={{ opacity: actionOpacity }}
+          onTap={handleActionTap}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{STAGE_CONFIG[visibleTarget].emoji}</span>
+            <span className={`text-sm font-medium ${STAGE_CONFIG[visibleTarget].color}`}>
+              {STAGE_CONFIG[visibleTarget].label}
+            </span>
+          </div>
+        </motion.div>
+      )}
 
+      {/* Swipeable card */}
       <motion.div
-        drag="x"
-        dragConstraints={{ left: canSwipeLeft ? -150 : 0, right: canSwipeRight ? 150 : 0 }}
-        dragElastic={0.1}
-        onDragEnd={handleDragEnd}
-        style={{ x, opacity }}
+        ref={scope}
+        onPanStart={handlePanStart}
+        onPan={handlePan}
+        onPanEnd={handlePanEnd}
+        style={{
+          x,
+          scale: phase === "dragging" ? 0.98 : 1,
+          touchAction: "pan-y",
+        }}
         className="relative z-10"
       >
         <Link
@@ -54,7 +231,11 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
           className="group flex gap-3 p-3 rounded-xl bg-white border border-forest/5 shadow-sm select-none"
           style={{ WebkitTouchCallout: "none" }}
           onClick={(e) => {
-            if (Math.abs(x.get()) > 5) e.preventDefault();
+            // Prevent navigation during swipe/peeking
+            if (phase !== "idle" || Math.abs(x.get()) > 5) {
+              e.preventDefault();
+              handleCardTap();
+            }
           }}
         >
           <div className="relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden bg-cream">
@@ -69,7 +250,16 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="text-forest/20"
+                >
                   <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
                 </svg>
               </div>
@@ -79,7 +269,9 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
             <h3 className="font-serif text-sm font-semibold text-ink truncate leading-tight">
               {book.title}
             </h3>
-            <p className="text-xs text-forest/50 truncate mt-0.5">{book.author}</p>
+            <p className="text-xs text-forest/50 truncate mt-0.5">
+              {book.author}
+            </p>
           </div>
         </Link>
       </motion.div>
