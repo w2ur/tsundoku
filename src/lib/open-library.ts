@@ -12,9 +12,14 @@ interface OLSearchDoc {
   isbn?: string[];
 }
 
-export async function searchBooks(query: string): Promise<OpenLibraryResult[]> {
+export async function searchBooks(
+  query: string,
+  author?: string,
+  limit: number = 5
+): Promise<OpenLibraryResult[]> {
   if (!query || query.length < 2) return [];
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5&fields=title,author_name,cover_i,isbn`;
+  const fullQuery = author ? `${query} ${author}` : query;
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(fullQuery)}&limit=${limit}&fields=title,author_name,cover_i,isbn`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
