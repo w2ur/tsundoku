@@ -25,7 +25,7 @@ export default function StageColumn({ stage, books }: StageColumnProps) {
       </div>
       <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
         {books.length === 0 ? (
-          <EmptyState showAdd={stage === "a_acheter"} />
+          <EmptyState />
         ) : (
           books.map((book) => <BookCard key={book.id} book={book} />)
         )}

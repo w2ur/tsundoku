@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -67,7 +68,7 @@ export default function KanbanBoard() {
         <StageTabs active={activeTab} counts={counts} onChange={setActiveTab} />
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {books.length === 0 ? (
-            <EmptyState showAdd={activeTab === "a_acheter"} quote={uniqueQuotes[activeTab]} />
+            <EmptyState quote={uniqueQuotes[activeTab]} />
           ) : (
             books.map((book) => <SwipeableBookCard key={book.id} book={book} />)
           )}
@@ -97,10 +98,20 @@ export default function KanbanBoard() {
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
                     {counts[stage]}
                   </span>
+                  <Link
+                    href={`/add?stage=${stage}`}
+                    className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
+                    aria-label={`Ajouter un livre à ${STAGE_CONFIG[stage].label}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" />
+                      <path d="M12 5v14" />
+                    </svg>
+                  </Link>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
                   {booksByStage[stage].length === 0 ? (
-                    <EmptyState showAdd={stage === "a_acheter"} quote={uniqueQuotes[stage]} />
+                    <EmptyState quote={uniqueQuotes[stage]} />
                   ) : (
                     booksByStage[stage].map((book, index) => (
                       <Draggable key={book.id} draggableId={book.id} index={index}>
@@ -122,7 +133,6 @@ export default function KanbanBoard() {
             )}
           </Droppable>
         ))}
-        <AddButton />
       </div>
     </DragDropContext>
   );

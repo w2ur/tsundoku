@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.2.1",
+    date: "2026-02-20",
+    changes: [
+      "Bouton + dans chaque colonne sur bureau",
+      "Suppression du bouton flottant sur bureau",
+      "Suppression du bouton « Ajouter un livre » dans les colonnes vides",
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-02-20",
     changes: [
