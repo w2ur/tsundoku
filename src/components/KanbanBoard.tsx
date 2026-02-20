@@ -16,7 +16,11 @@ import BookCard from "./BookCard";
 import SwipeableBookCard from "./SwipeableBookCard";
 import EmptyState from "./EmptyState";
 
-export default function KanbanBoard() {
+interface KanbanBoardProps {
+  searchQuery?: string;
+}
+
+export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const stageParam = searchParams.get("stage");

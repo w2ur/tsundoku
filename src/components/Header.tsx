@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function Header() {
+interface HeaderProps {
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}
+
+export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
