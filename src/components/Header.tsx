@@ -25,12 +25,6 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
     }
   }, [isSearchOpen]);
 
-  useEffect(() => {
-    if (!isSearchOpen && searchQuery) {
-      onSearchChange?.("");
-    }
-  }, [isSearchOpen]);
-
   function handleClose() {
     setIsSearchOpen(false);
     onSearchChange?.("");
