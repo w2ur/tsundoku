@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
@@ -38,6 +38,21 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
 
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
+
+  const preSearchTab = useRef<Stage | null>(null);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      if (!preSearchTab.current) {
+        preSearchTab.current = activeTab;
+      }
+    } else {
+      if (preSearchTab.current) {
+        setActiveTab(preSearchTab.current);
+        preSearchTab.current = null;
+      }
+    }
+  }, [searchQuery, activeTab, setActiveTab]);
 
   const filteredByStage = useMemo(() => {
     if (!booksByStage || !searchQuery.trim()) return booksByStage;
