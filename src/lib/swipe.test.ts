@@ -5,14 +5,14 @@ describe("getSwipeThresholds", () => {
   it("computes thresholds from card width", () => {
     const t = getSwipeThresholds(320);
     expect(t.deadZone).toBe(15);
-    expect(t.revealSnap).toBe(96);   // 30% of 320
+    expect(t.revealSnap).toBe(64);   // 20% of 320
     expect(t.fullConfirm).toBe(256); // 80% of 320
   });
 
   it("handles narrow cards", () => {
     const t = getSwipeThresholds(200);
     expect(t.deadZone).toBe(15);
-    expect(t.revealSnap).toBe(60);
+    expect(t.revealSnap).toBe(40);
     expect(t.fullConfirm).toBe(160);
   });
 });

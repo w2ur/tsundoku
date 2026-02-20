@@ -1,5 +1,5 @@
 const DEAD_ZONE = 15;
-const REVEAL_SNAP_PERCENT = 0.3;
+const REVEAL_SNAP_PERCENT = 0.2;
 const FULL_CONFIRM_PERCENT = 0.8;
 
 export interface SwipeThresholds {

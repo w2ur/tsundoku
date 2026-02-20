@@ -18,6 +18,7 @@ import type { Book } from "@/lib/types";
 type SwipePhase = "idle" | "dragging" | "peeking" | "confirmed";
 
 // Module-level: track which card is currently peeking so we dismiss it when another opens
+let activePeekingId: string | null = null;
 let activePeekingDismiss: (() => void) | null = null;
 
 export default function SwipeableBookCard({ book }: { book: Book }) {
@@ -29,6 +30,7 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
   const swipeDirectionRef = useRef<"left" | "right" | null>(null);
   const crossedRevealRef = useRef(false);
   const crossedConfirmRef = useRef(false);
+  const baseOffsetRef = useRef(0);
 
   const stageIndex = STAGES.indexOf(book.stage);
   const canSwipeRight = stageIndex < STAGES.length - 1;
@@ -50,6 +52,9 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
     swipeDirectionRef.current = null;
     crossedRevealRef.current = false;
     crossedConfirmRef.current = false;
+    baseOffsetRef.current = 0;
+    activePeekingDismiss = null;
+    activePeekingId = null;
     animate(scope.current, { x: 0 }, { type: "spring", stiffness: 300, damping: 30 });
   }, [animate, scope]);
 
@@ -86,26 +91,36 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
     if (cardRef.current) {
       cardWidthRef.current = cardRef.current.offsetWidth;
     }
-    // Dismiss any other peeking card
-    if (activePeekingDismiss) {
+    // Dismiss any OTHER peeking card (not this one)
+    if (activePeekingDismiss && activePeekingId !== book.id) {
       activePeekingDismiss();
       activePeekingDismiss = null;
+      activePeekingId = null;
     }
-    crossedRevealRef.current = false;
-    crossedConfirmRef.current = false;
-  }, []);
+    if (phase === "peeking") {
+      // Resume from peeking: keep direction, continue from current position
+      baseOffsetRef.current = x.get();
+      setPhase("dragging");
+      crossedRevealRef.current = true; // already past reveal
+      crossedConfirmRef.current = false;
+    } else {
+      baseOffsetRef.current = 0;
+      crossedRevealRef.current = false;
+      crossedConfirmRef.current = false;
+    }
+  }, [book.id, phase, x]);
 
   const handlePan = useCallback(
     (_: PointerEvent, info: PanInfo) => {
-      const offset = info.offset.x;
+      const offset = baseOffsetRef.current + info.offset.x;
       const absOffset = Math.abs(offset);
       const width = cardWidthRef.current;
       if (width === 0) return;
 
       const { deadZone, revealSnap, fullConfirm } = getSwipeThresholds(width);
 
-      // Still in dead zone — don't start
-      if (absOffset < deadZone) return;
+      // Still in dead zone — don't start (only applies when starting fresh)
+      if (absOffset < deadZone && !swipeDirectionRef.current) return;
 
       // Lock swipe direction on first meaningful move
       if (!swipeDirectionRef.current) {
@@ -148,11 +163,12 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
         return;
       }
 
-      const offset = Math.abs(info.offset.x);
+      const effectiveOffset = baseOffsetRef.current + info.offset.x;
+      const absOffset = Math.abs(effectiveOffset);
       const width = cardWidthRef.current;
 
       // Full confirm: offset past 80%
-      if (shouldConfirm(info.offset.x, width)) {
+      if (shouldConfirm(effectiveOffset, width)) {
         confirmMove(direction);
         return;
       }
@@ -160,18 +176,19 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
       const { revealSnap } = getSwipeThresholds(width);
 
       // Peeking: snap open at 30%
-      if (offset >= revealSnap) {
+      if (absOffset >= revealSnap) {
         setPhase("peeking");
         const snapX = direction === "right" ? revealSnap : -revealSnap;
         animate(scope.current, { x: snapX }, { type: "spring", stiffness: 300, damping: 30 });
         activePeekingDismiss = dismissToIdle;
+        activePeekingId = book.id;
         return;
       }
 
       // Below reveal threshold: snap back
       dismissToIdle();
     },
-    [dismissToIdle, confirmMove, animate, scope]
+    [dismissToIdle, confirmMove, animate, scope, book.id]
   );
 
   const handleActionTap = useCallback(() => {
@@ -204,9 +221,9 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
           style={{ opacity: actionOpacity }}
           onTap={handleActionTap}
         >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{STAGE_CONFIG[visibleTarget].emoji}</span>
-            <span className={`text-sm font-medium ${STAGE_CONFIG[visibleTarget].color}`}>
+          <div className="flex flex-col items-center gap-1 overflow-hidden">
+            <span className="text-xl">{STAGE_CONFIG[visibleTarget].emoji}</span>
+            <span className={`text-xs font-medium text-center leading-tight line-clamp-2 ${STAGE_CONFIG[visibleTarget].color}`}>
               {STAGE_CONFIG[visibleTarget].label}
             </span>
           </div>
