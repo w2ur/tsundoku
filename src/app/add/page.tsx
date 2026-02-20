@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 
 const methods = [
@@ -29,6 +30,9 @@ const methods = [
 ];
 
 export default function AddPage() {
+  const searchParams = useSearchParams();
+  const stage = searchParams.get("stage") || "tsundoku";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -38,7 +42,7 @@ export default function AddPage() {
           {methods.map((m) => (
             <Link
               key={m.href}
-              href={m.href}
+              href={`${m.href}?stage=${stage}`}
               className="flex items-center gap-4 p-4 bg-white border border-forest/8 rounded-xl hover:border-forest/15 hover:shadow-sm transition-all group"
             >
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-forest/5 text-forest/60 group-hover:bg-forest/10 transition-colors">

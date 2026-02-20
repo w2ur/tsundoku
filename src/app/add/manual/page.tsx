@@ -1,22 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import BookForm, { type BookFormData } from "@/components/BookForm";
 import BookConfirmation from "@/components/BookConfirmation";
 import { addBook } from "@/lib/books";
+import type { Stage } from "@/lib/types";
 
 export default function ManualAddPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stage = searchParams.get("stage") || "tsundoku";
   const [pending, setPending] = useState<BookFormData | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
     if (!pending) return;
     setLoading(true);
-    await addBook({ ...pending, ...extra });
-    router.push("/");
+    await addBook({ ...pending, ...extra, stage: stage as Stage });
+    router.push(`/?stage=${stage}`);
   }
 
   return (

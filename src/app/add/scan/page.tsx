@@ -2,11 +2,12 @@
 
 import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import BookConfirmation from "@/components/BookConfirmation";
 import { getBookByISBN } from "@/lib/open-library";
 import { addBook } from "@/lib/books";
+import type { Stage } from "@/lib/types";
 
 const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
   ssr: false,
@@ -19,6 +20,8 @@ const BarcodeScanner = dynamic(() => import("@/components/BarcodeScanner"), {
 
 export default function ScanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stage = searchParams.get("stage") || "tsundoku";
   const [status, setStatus] = useState<"idle" | "loading" | "confirm">("idle");
   const [isbn, setIsbn] = useState("");
   const [error, setError] = useState("");
@@ -69,8 +72,8 @@ export default function ScanPage() {
   async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
     if (!bookData) return;
     setSaving(true);
-    await addBook({ ...bookData, ...extra, isbn });
-    router.push("/");
+    await addBook({ ...bookData, ...extra, isbn, stage: stage as Stage });
+    router.push(`/?stage=${stage}`);
   }
 
   function handleCancel() {
@@ -148,7 +151,7 @@ export default function ScanPage() {
             {/* Escape hatch */}
             <div className="text-center pt-2">
               <a
-                href="/add/manual"
+                href={`/add/manual?stage=${stage}`}
                 className="text-sm text-forest/40 hover:text-forest/60 transition-colors"
               >
                 Saisie manuelle
