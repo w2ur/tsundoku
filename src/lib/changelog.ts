@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.5.0",
+    date: "2026-02-21",
+    changes: [
+      "Nouveau swipe en deux étapes sur mobile : glissez pour prévisualiser, puis confirmez",
+      "Retour haptique lors du swipe (sur appareils compatibles)",
+      "Reprise du swipe depuis la position ouverte sans réinitialisation",
+    ],
+  },
+  {
     version: "1.4.0",
     date: "2026-02-20",
     changes: [
