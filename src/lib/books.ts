@@ -11,18 +11,22 @@ export async function addBook(
   }
 ): Promise<Book> {
   const stage = data.stage ?? "a_acheter";
-  const booksInStage = await db.books.where("stage").equals(stage).toArray();
-  const maxPosition = booksInStage.reduce(
-    (max, b) => Math.max(max, b.position ?? 0),
-    -1
-  );
+
+  // Shift existing books down to make room at position 0
+  const existing = await db.books.where("stage").equals(stage).toArray();
+  if (existing.length > 0) {
+    await Promise.all(
+      existing.map((b) => db.books.update(b.id, { position: b.position + 1 }))
+    );
+  }
+
   const book: Book = {
     id: uuidv4(),
     title: data.title,
     author: data.author,
     coverUrl: data.coverUrl,
     stage,
-    position: maxPosition + 1,
+    position: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     ...(data.notes && { notes: data.notes }),

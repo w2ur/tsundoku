@@ -49,9 +49,13 @@ beforeEach(() => {
 });
 
 describe("addBook", () => {
-  it("creates a book with correct structure", async () => {
-    mockWhereToArray.mockResolvedValue([]);
+  it("creates a book with position 0 and shifts existing books", async () => {
+    mockWhereToArray.mockResolvedValue([
+      { id: "existing-1", stage: "a_acheter", position: 0 },
+      { id: "existing-2", stage: "a_acheter", position: 1 },
+    ]);
     mockAdd.mockResolvedValue(undefined);
+    mockUpdate.mockResolvedValue(undefined);
 
     const book = await addBook({
       title: "Le Petit Prince",
@@ -66,7 +70,9 @@ describe("addBook", () => {
     expect(book.position).toBe(0);
     expect(book.createdAt).toBeTypeOf("number");
     expect(book.updatedAt).toBeTypeOf("number");
-    expect(mockAdd).toHaveBeenCalledWith(book);
+    expect(mockUpdate).toHaveBeenCalledWith("existing-1", { position: 1 });
+    expect(mockUpdate).toHaveBeenCalledWith("existing-2", { position: 2 });
+    expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({ position: 0 }));
   });
 
   it("uses provided stage instead of default", async () => {
