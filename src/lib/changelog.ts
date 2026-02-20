@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.3.0",
+    date: "2026-02-20",
+    changes: [
+      "Recherche rapide depuis le tableau : filtrez vos livres par titre ou auteur",
+    ],
+  },
+  {
     version: "1.2.3",
     date: "2026-02-20",
     changes: [
