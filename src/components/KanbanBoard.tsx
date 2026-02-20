@@ -147,22 +147,64 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
 
   if (isMobile) {
     const books = filteredByStage[activeTab];
+    const isSearching = Boolean(searchQuery.trim());
     return (
-      <div className="flex flex-col h-[calc(100vh-65px)]">
-        <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={Boolean(searchQuery.trim())} />
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {books.length === 0 ? (
-            searchQuery.trim() ? (
-              <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
-            ) : (
-              <EmptyState quote={uniqueQuotes[activeTab]} />
-            )
-          ) : (
-            books.map((book) => <SwipeableBookCard key={book.id} book={book} />)
-          )}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex flex-col h-[calc(100vh-65px)]">
+          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
+          <Droppable droppableId={activeTab}>
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="flex-1 overflow-y-auto p-3 space-y-2"
+              >
+                {books.length === 0 ? (
+                  isSearching ? (
+                    <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
+                  ) : (
+                    <EmptyState quote={uniqueQuotes[activeTab]} />
+                  )
+                ) : (
+                  books.map((book, index) => (
+                    <Draggable key={book.id} draggableId={book.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="flex items-center gap-2"
+                        >
+                          {!isSearching && (
+                            <div
+                              {...provided.dragHandleProps}
+                              className="touch-none flex-shrink-0 p-1 text-forest/30"
+                              aria-label="Réordonner"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="9" cy="5" r="1.5" />
+                                <circle cx="15" cy="5" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" />
+                                <circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="19" r="1.5" />
+                                <circle cx="15" cy="19" r="1.5" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <SwipeableBookCard book={book} />
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          <AddButton />
         </div>
-        <AddButton />
-      </div>
+      </DragDropContext>
     );
   }
 
