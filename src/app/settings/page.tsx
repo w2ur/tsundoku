@@ -16,6 +16,7 @@ export default function SettingsPage() {
     ? STAGES.reduce((sum, s) => sum + booksByStage[s].length, 0)
     : 0;
 
+  const [showRoadmap, setShowRoadmap] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
     () => new Set()
@@ -75,30 +76,53 @@ export default function SettingsPage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
-            Prochainement
-          </h2>
-          <div className="bg-white border border-forest/8 rounded-xl p-4 space-y-3">
-            {roadmap.map((item) => (
-              <div key={item.title} className="flex gap-3">
-                <span className="text-base leading-relaxed">{item.icon}</span>
-                <div>
-                  <p className="text-sm font-medium text-ink">{item.title}</p>
-                  <p className="text-xs text-forest/40">{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-forest/30 mt-2 italic">
-            Ces fonctionnalités ne sont pas dans un ordre particulier.
-            Une idée ou une préférence ?{" "}
-            <a
-              href="mailto:contact@my-tsundoku.app?subject=%5BTsundoku%5D%20Suggestion"
-              className="underline hover:text-forest/50 transition-colors"
+          <button
+            onClick={() => setShowRoadmap((prev) => !prev)}
+            className="flex items-center gap-2 mb-3 group"
+          >
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
+              Prochainement
+            </h2>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`text-forest/30 transition-transform ${
+                showRoadmap ? "rotate-180" : ""
+              }`}
             >
-              Me contacter
-            </a>
-          </p>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showRoadmap && <>
+            <div className="bg-white border border-forest/8 rounded-xl p-4 space-y-3">
+              {roadmap.map((item) => (
+                <div key={item.title} className="flex gap-3">
+                  <span className="text-base leading-relaxed">{item.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium text-ink">{item.title}</p>
+                    <p className="text-xs text-forest/40">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-forest/30 mt-2 italic">
+              Ces fonctionnalités ne sont pas dans un ordre particulier.
+              Une idée ou une préférence ?{" "}
+              <a
+                href="mailto:contact@my-tsundoku.app?subject=%5BTsundoku%5D%20Suggestion"
+                className="underline hover:text-forest/50 transition-colors"
+              >
+                Me contacter
+              </a>
+            </p>
+          </>}
         </section>
 
         <section className="mt-8">

@@ -10,7 +10,7 @@ export const changelog: ChangelogEntry[] = [
     date: "2026-02-20",
     changes: [
       "Le bouton + sur mobile redirige vers tsundoku par défaut",
-      "La section Nouveautés est désormais repliable dans les paramètres",
+      "Les sections Prochainement et Nouveautés sont désormais repliables dans les paramètres",
     ],
   },
   {
