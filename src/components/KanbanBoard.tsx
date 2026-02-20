@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -15,9 +16,22 @@ import SwipeableBookCard from "./SwipeableBookCard";
 import EmptyState from "./EmptyState";
 
 export default function KanbanBoard() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const stageParam = searchParams.get("stage");
+  const activeTab: Stage = STAGES.includes(stageParam as Stage)
+    ? (stageParam as Stage)
+    : "tsundoku";
+
+  const setActiveTab = useCallback(
+    (stage: Stage) => {
+      router.replace(`/?stage=${stage}`, { scroll: false });
+    },
+    [router]
+  );
+
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<Stage>("tsundoku");
 
   const uniqueQuotes = useMemo(() => {
     const quotes = getUniqueQuotes(STAGES.length);
