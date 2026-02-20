@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 
 export default function AddButton() {
   const searchParams = useSearchParams();
-  const stage = searchParams.get("stage");
-  const href = stage ? `/add?stage=${stage}` : "/add";
+  const stage = searchParams.get("stage") || "tsundoku";
+  const href = `/add?stage=${stage}`;
 
   return (
     <Link

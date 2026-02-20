@@ -16,6 +16,7 @@ export default function SettingsPage() {
     ? STAGES.reduce((sum, s) => sum + booksByStage[s].length, 0)
     : 0;
 
+  const [showChangelog, setShowChangelog] = useState(false);
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
     () => new Set()
   );
@@ -101,10 +102,31 @@ export default function SettingsPage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
-            Nouveautés
-          </h2>
-          <div className="space-y-2">
+          <button
+            onClick={() => setShowChangelog((prev) => !prev)}
+            className="flex items-center gap-2 mb-3 group"
+          >
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
+              Nouveautés
+            </h2>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`text-forest/30 transition-transform ${
+                showChangelog ? "rotate-180" : ""
+              }`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showChangelog && <div className="space-y-2">
             {changelog.map((entry) => {
               const isExpanded = expandedVersions.has(entry.version);
               return (
@@ -162,7 +184,7 @@ export default function SettingsPage() {
                 </div>
               );
             })}
-          </div>
+          </div>}
         </section>
 
         <section className="mt-12 pt-8 border-t border-forest/10">

@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.2.3",
+    date: "2026-02-20",
+    changes: [
+      "Le bouton + sur mobile redirige vers tsundoku par défaut",
+      "La section Nouveautés est désormais repliable dans les paramètres",
+    ],
+  },
+  {
     version: "1.2.2",
     date: "2026-02-20",
     changes: [
