@@ -34,6 +34,10 @@ class TsundokuDB extends Dexie {
         }
       }
     });
+    this.version(5).stores({
+      books: "id, stage, title, author, createdAt, updatedAt, position",
+      settings: "key",
+    });
   }
 }
 

@@ -43,7 +43,7 @@ export async function getBook(id: string): Promise<Book | undefined> {
 
 export async function updateBook(
   id: string,
-  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl" | "isbn">>
+  data: Partial<Pick<Book, "title" | "author" | "coverUrl" | "stage" | "notes" | "storeUrl" | "isbn" | "isReading">>
 ): Promise<void> {
   await db.books.update(id, { ...data, updatedAt: Date.now() });
 }

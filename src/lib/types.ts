@@ -9,6 +9,7 @@ export interface Book {
   position: number;
   createdAt: number;
   updatedAt: number;
+  isReading?: boolean;
   notes?: string;
   storeUrl?: string;
   isbn?: string;
