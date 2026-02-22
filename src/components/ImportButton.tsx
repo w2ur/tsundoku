@@ -73,7 +73,7 @@ export default function ImportButton() {
             </button>
             <button
               onClick={() => handleImport("replace")}
-              className="flex-1 py-2.5 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+              className="flex-1 py-2.5 border border-error-border text-error-text rounded-lg text-sm font-medium hover:bg-error-bg transition-colors"
             >
               {t("import_replaceAll")}
             </button>
