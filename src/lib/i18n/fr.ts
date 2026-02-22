@@ -117,6 +117,12 @@ const fr = {
   offline_text:
     "Vous êtes actuellement hors ligne. Vos livres sont toujours accessibles, mais certaines fonctionnalités nécessitent une connexion internet.",
   offline_button: "Retour à mes livres",
+  book_reading: "En cours de lecture",
+  book_markReading: "Marquer en lecture",
+  book_unmarkReading: "Retirer le marqueur",
+  book_moveToNextStage: "Déplacer vers {stage} ?",
+  book_moveToNextStage_yes: "Oui",
+  book_moveToNextStage_no: "Non",
 } as const;
 
 export default fr;

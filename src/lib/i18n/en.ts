@@ -117,6 +117,12 @@ const en: Record<TranslationKeys, string> = {
   offline_text:
     "You are currently offline. Your books are still accessible, but some features require an internet connection.",
   offline_button: "Back to my books",
+  book_reading: "Currently reading",
+  book_markReading: "Mark as reading",
+  book_unmarkReading: "Remove reading mark",
+  book_moveToNextStage: "Move to {stage}?",
+  book_moveToNextStage_yes: "Yes",
+  book_moveToNextStage_no: "No",
 };
 
 export default en;
