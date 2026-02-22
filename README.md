@@ -1,6 +1,6 @@
 # Tsundoku
 
-Tsundoku (積ん読) is a French-language PWA for organizing personal book collections. Inspired by the Japanese concept of letting unread books pile up, it provides a Kanban-style board to track books across four stages: wishlist, unread pile, library, and to sell. All data is stored locally in the browser via IndexedDB — no account needed.
+Tsundoku (積ん読) is a PWA for organizing personal book collections. Inspired by the Japanese concept of letting unread books pile up, it provides a Kanban-style board to track books across four stages: wishlist, unread pile, library, and to sell. Available in French and English, with light and dark mode. All data is stored locally in the browser via IndexedDB — no account needed.
 
 ## Tech Stack
 
@@ -54,11 +54,11 @@ src/
 
 Planned features (in no particular order):
 
-- **Partagez votre Tsundoku** — Share your book piles and recommendations with friends
-- **Clubs de lecture** — Find readers with the same books and start a club
-- **Trouver en librairie** — Find your books in online bookstores
-- **Statistiques de lecture** — Track how many books you read per month and year
-- **Synchronisation cloud** — Sync your library across devices
+- **Share your Tsundoku** — Share your book piles and recommendations with friends
+- **Book clubs** — Find readers with the same books and start a club
+- **Find in bookstores** — Find your books in online bookstores
+- **Reading statistics** — Track how many books you read per month and year
+- **Cloud sync** — Sync your library across devices
 
 Have a suggestion? [Get in touch](mailto:contact@my-tsundoku.app).
 
