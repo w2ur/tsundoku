@@ -158,3 +158,14 @@ export async function moveBookToPosition(
 
   await Promise.all(updates);
 }
+
+export async function markAsReading(bookId: string): Promise<void> {
+  const book = await db.books.get(bookId);
+  if (!book) return;
+  await moveBookToPosition(bookId, book.stage, 0);
+  await db.books.update(bookId, { isReading: true, updatedAt: Date.now() });
+}
+
+export async function unmarkReading(bookId: string): Promise<void> {
+  await db.books.update(bookId, { isReading: false, updatedAt: Date.now() });
+}

@@ -30,7 +30,7 @@ vi.mock("uuid", () => ({
   v4: () => "mock-uuid-1234",
 }));
 
-import { addBook, getBook, updateBook, deleteBook, getAllBooks, importBooks, computeReorder, moveBookToPosition, ensurePositions } from "./books";
+import { addBook, getBook, updateBook, deleteBook, getAllBooks, importBooks, computeReorder, moveBookToPosition, ensurePositions, markAsReading, unmarkReading } from "./books";
 import type { Book } from "./types";
 
 function makeBook(overrides: Partial<Book> & { id: string; stage: Book["stage"]; position: number }): Book {
@@ -283,5 +283,65 @@ describe("moveBookToPosition", () => {
     mockToArray.mockResolvedValue([]);
     await moveBookToPosition("nonexistent", "tsundoku", 0);
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("markAsReading", () => {
+  it("sets isReading to true and moves book to position 0", async () => {
+    const book = makeBook({ id: "book-1", stage: "tsundoku", position: 2 });
+    const allBooks = [
+      makeBook({ id: "book-0", stage: "tsundoku", position: 0 }),
+      makeBook({ id: "book-1", stage: "tsundoku", position: 2 }),
+    ];
+    mockGet.mockResolvedValue(book);
+    mockToArray.mockResolvedValue(allBooks);
+    mockUpdate.mockResolvedValue(undefined);
+
+    await markAsReading("book-1");
+
+    // moveBookToPosition should have been called (triggers toArray)
+    expect(mockToArray).toHaveBeenCalled();
+    // isReading update should follow
+    expect(mockUpdate).toHaveBeenCalledWith("book-1", {
+      isReading: true,
+      updatedAt: expect.any(Number),
+    });
+  });
+
+  it("is a no-op for position if book is already at position 0", async () => {
+    const book = makeBook({ id: "solo-1", stage: "a_acheter", position: 0 });
+    mockGet.mockResolvedValue(book);
+    mockToArray.mockResolvedValue([book]);
+    mockUpdate.mockResolvedValue(undefined);
+
+    await markAsReading("solo-1");
+
+    expect(mockUpdate).toHaveBeenCalledWith("solo-1", {
+      isReading: true,
+      updatedAt: expect.any(Number),
+    });
+  });
+
+  it("does nothing when book is not found", async () => {
+    mockGet.mockResolvedValue(undefined);
+
+    await markAsReading("nonexistent");
+
+    expect(mockToArray).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("unmarkReading", () => {
+  it("sets isReading to false without changing position", async () => {
+    mockUpdate.mockResolvedValue(undefined);
+
+    await unmarkReading("book-1");
+
+    expect(mockUpdate).toHaveBeenCalledWith("book-1", {
+      isReading: false,
+      updatedAt: expect.any(Number),
+    });
+    expect(mockToArray).not.toHaveBeenCalled();
   });
 });
