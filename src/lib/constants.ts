@@ -5,28 +5,32 @@ export type Stage = (typeof STAGES)[number];
 
 export const STAGE_CONFIG: Record<
   Stage,
-  { labelKey: TranslationKeys; color: string; bgColor: string; emoji: string }
+  { labelKey: TranslationKeys; swipeLabelKey: TranslationKeys; color: string; bgColor: string; emoji: string }
 > = {
   a_acheter: {
     labelKey: "stage_a_acheter",
+    swipeLabelKey: "swipe_a_acheter",
     color: "text-amber",
     bgColor: "bg-amber/10",
     emoji: "📋",
   },
   tsundoku: {
     labelKey: "stage_tsundoku",
+    swipeLabelKey: "swipe_tsundoku",
     color: "text-forest",
     bgColor: "bg-forest/10",
     emoji: "📚",
   },
   bibliotheque: {
     labelKey: "stage_bibliotheque",
+    swipeLabelKey: "swipe_bibliotheque",
     color: "text-forest",
     bgColor: "bg-forest/10",
     emoji: "📖",
   },
   revendre: {
     labelKey: "stage_revendre",
+    swipeLabelKey: "swipe_revendre",
     color: "text-amber",
     bgColor: "bg-amber/10",
     emoji: "👋",
