@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
+import { PreferencesProvider } from "@/lib/preferences";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import "./globals.css";
 
@@ -40,8 +41,10 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-paper text-ink`}
       >
-        <ServiceWorkerRegistrar />
-        {children}
+        <PreferencesProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </PreferencesProvider>
       </body>
     </html>
   );
