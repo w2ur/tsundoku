@@ -20,9 +20,17 @@ import EmptyState from "./EmptyState";
 
 interface KanbanBoardProps {
   searchQuery?: string;
+  scrollToBookId?: string | null;
+  onScrollToBook?: (bookId: string | null) => void;
+  onClearSearch?: () => void;
 }
 
-export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
+export default function KanbanBoard({
+  searchQuery = "",
+  scrollToBookId = null,
+  onScrollToBook,
+  onClearSearch,
+}: KanbanBoardProps) {
   const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -132,6 +140,43 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
     [searchQuery]
   );
 
+  const handleSearchResultClick = useCallback(
+    (e: React.MouseEvent, book: Book) => {
+      if (!searchQuery.trim()) return;
+      e.preventDefault();
+      // Reset preSearchTab so the restoration effect doesn't override the teleport tab switch
+      preSearchTab.current = null;
+      // Record which book to scroll to
+      onScrollToBook?.(book.id);
+      // Switch to the correct tab on mobile
+      if (isMobile) {
+        setActiveTab(book.stage);
+      }
+      // Clear search (re-enables DnD and shows all books)
+      onClearSearch?.();
+    },
+    [searchQuery, onScrollToBook, onClearSearch, isMobile, setActiveTab]
+  );
+
+  useEffect(() => {
+    if (!scrollToBookId) return;
+
+    // Small delay to let DOM update after search clears and tab switches
+    const timer = setTimeout(() => {
+      const element = document.querySelector(`[data-book-id="${scrollToBookId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.classList.add("glow-highlight");
+        setTimeout(() => {
+          element.classList.remove("glow-highlight");
+        }, 2000);
+      }
+      onScrollToBook?.(null);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [scrollToBookId, onScrollToBook]);
+
   if (!filteredByStage) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -175,6 +220,8 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
+                          data-book-id={book.id}
+                          onClick={(e) => handleSearchResultClick(e, book)}
                         >
                           <SwipeableBookCard book={book} />
                         </div>
@@ -238,6 +285,8 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
+                            data-book-id={book.id}
+                            onClick={(e) => handleSearchResultClick(e, book)}
                           >
                             <BookCard book={book} />
                           </div>

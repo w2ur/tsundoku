@@ -8,6 +8,7 @@ import WelcomeGuide from "@/components/WelcomeGuide";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [scrollToBookId, setScrollToBookId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -16,7 +17,12 @@ export default function Home() {
         onSearchChange={setSearchQuery}
       />
       <main className="flex-1">
-        <KanbanBoard searchQuery={searchQuery} />
+        <KanbanBoard
+          searchQuery={searchQuery}
+          scrollToBookId={scrollToBookId}
+          onScrollToBook={setScrollToBookId}
+          onClearSearch={() => setSearchQuery("")}
+        />
       </main>
       <WelcomeGuide />
       <Footer />

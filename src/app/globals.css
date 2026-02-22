@@ -57,3 +57,20 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+@keyframes glow-fade {
+  0% {
+    box-shadow: 0 0 0 3px var(--amber);
+  }
+  70% {
+    box-shadow: 0 0 0 3px var(--amber);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.glow-highlight {
+  animation: glow-fade 2s ease-out forwards;
+  border-radius: 0.75rem;
+}
