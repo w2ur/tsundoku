@@ -11,7 +11,8 @@ import DeleteButton from "@/components/DeleteButton";
 import BookForm from "@/components/BookForm";
 import type { BookFormData } from "@/components/BookForm";
 import { useBook } from "@/hooks/useBooks";
-import { updateBook } from "@/lib/books";
+import { updateBook, markAsReading, unmarkReading, moveBookToPosition } from "@/lib/books";
+import { STAGE_TRANSITIONS, STAGE_CONFIG } from "@/lib/constants";
 import { useTranslation } from "@/lib/preferences";
 
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +20,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const book = useBook(id);
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [showUnmarkPrompt, setShowUnmarkPrompt] = useState(false);
   const { t } = useTranslation();
 
   if (book === undefined) {
@@ -46,6 +48,28 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   async function handleSave(data: BookFormData) {
     await updateBook(book!.id, data);
     setEditing(false);
+  }
+
+  async function handleMarkReading() {
+    await markAsReading(book!.id);
+  }
+
+  async function handleUnmarkReading() {
+    setShowUnmarkPrompt(true);
+  }
+
+  async function handleUnmarkConfirm(moveToNext: boolean) {
+    const currentBook = book!;
+    await unmarkReading(currentBook.id);
+    if (moveToNext) {
+      const transitions = STAGE_TRANSITIONS[currentBook.stage];
+      if (transitions.length > 0) {
+        await moveBookToPosition(currentBook.id, transitions[0].next, 0);
+        router.push("/");
+        return;
+      }
+    }
+    setShowUnmarkPrompt(false);
   }
 
   return (
@@ -111,6 +135,49 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           )}
 
           <StageBadge stage={book.stage} />
+
+          {/* Reading toggle */}
+          {!editing && (
+            <div className="w-full max-w-xs">
+              {showUnmarkPrompt ? (
+                <div className="flex flex-col gap-2 p-4 bg-cream rounded-xl">
+                  <p className="text-sm text-forest/70 text-center">
+                    {t("book_moveToNextStage").replace(
+                      "{stage}",
+                      STAGE_TRANSITIONS[book.stage]?.[0]
+                        ? t(STAGE_CONFIG[STAGE_TRANSITIONS[book.stage][0].next].labelKey)
+                        : ""
+                    )}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUnmarkConfirm(true)}
+                      className="flex-1 py-2 bg-forest text-paper rounded-lg text-sm font-medium"
+                    >
+                      {t("book_moveToNextStage_yes")}
+                    </button>
+                    <button
+                      onClick={() => handleUnmarkConfirm(false)}
+                      className="flex-1 py-2 border border-forest/15 rounded-lg text-sm text-forest/60"
+                    >
+                      {t("book_moveToNextStage_no")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={book.isReading ? handleUnmarkReading : handleMarkReading}
+                  className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    book.isReading
+                      ? "bg-amber/15 text-amber border border-amber/30"
+                      : "border border-forest/15 text-forest/50 hover:bg-cream"
+                  }`}
+                >
+                  {book.isReading ? t("book_unmarkReading") : t("book_markReading")}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Store URL (display mode only) */}
           {!editing && book.storeUrl && (
