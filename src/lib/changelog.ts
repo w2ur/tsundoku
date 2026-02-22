@@ -8,6 +8,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.7.0",
+    date: "2026-02-22",
+    changes: {
+      fr: [
+        "Recherche rapide : touchez un résultat pour accéder directement au livre dans sa colonne",
+        "Marquez vos livres « en cours de lecture » — ils montent automatiquement en haut de la pile",
+      ],
+      en: [
+        "Quick search: tap a result to jump directly to the book in its column",
+        "Mark books as \"currently reading\" — they automatically move to the top of the pile",
+      ],
+    },
+  },
+  {
     version: "1.6.0",
     date: "2026-02-22",
     changes: {
