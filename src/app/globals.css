@@ -3,42 +3,54 @@
 :root {
   --background: #FAF8F5;
   --foreground: #2D4A3E;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-paper: #FAF8F5;
-  --color-surface: #FFFFFF;
-  --color-forest: #2D4A3E;
-  --color-amber: #C4956A;
-  --color-cream: #F5F0EB;
-  --color-ink: #1a1a1a;
-  --color-success-bg: #f0fdf4;
-  --color-success-border: #bbf7d0;
-  --color-success-text: #15803d;
-  --color-error-bg: #fef2f2;
-  --color-error-border: #fecaca;
-  --color-error-text: #dc2626;
-  --font-serif: var(--font-playfair);
-  --font-sans: var(--font-inter);
+  --paper: #FAF8F5;
+  --surface: #FFFFFF;
+  --forest: #2D4A3E;
+  --amber: #C4956A;
+  --cream: #F5F0EB;
+  --ink: #1a1a1a;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --success-text: #15803d;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #dc2626;
 }
 
 [data-theme="dark"] {
   --background: #1A2B24;
   --foreground: #E8E2DB;
-  --color-paper: #1A2B24;
-  --color-surface: #243830;
-  --color-forest: #E8E2DB;
-  --color-amber: #C4956A;
-  --color-cream: #1F322B;
-  --color-ink: #E8E2DB;
-  --color-success-bg: #052e16;
-  --color-success-border: #14532d;
-  --color-success-text: #86efac;
-  --color-error-bg: #450a0a;
-  --color-error-border: #7f1d1d;
-  --color-error-text: #fca5a5;
+  --paper: #1A2B24;
+  --surface: #243830;
+  --forest: #E8E2DB;
+  --amber: #C4956A;
+  --cream: #1F322B;
+  --ink: #E8E2DB;
+  --success-bg: #052e16;
+  --success-border: #14532d;
+  --success-text: #86efac;
+  --error-bg: #450a0a;
+  --error-border: #7f1d1d;
+  --error-text: #fca5a5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-forest: var(--forest);
+  --color-amber: var(--amber);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-text: var(--error-text);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
 }
 
 body {
