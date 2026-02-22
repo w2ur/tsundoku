@@ -7,6 +7,7 @@ import BookForm, { type BookFormData } from "@/components/BookForm";
 import BookConfirmation from "@/components/BookConfirmation";
 import { addBook } from "@/lib/books";
 import type { Stage } from "@/lib/types";
+import { useTranslation } from "@/lib/preferences";
 
 export default function ManualAddPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function ManualAddPage() {
   const stage = searchParams.get("stage") || "tsundoku";
   const [pending, setPending] = useState<BookFormData | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
     if (!pending) return;
@@ -26,7 +28,7 @@ export default function ManualAddPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 px-4 py-8 max-w-lg mx-auto w-full">
-        <h1 className="font-serif text-2xl text-forest mb-6">Saisie manuelle</h1>
+        <h1 className="font-serif text-2xl text-forest mb-6">{t("addBook_manualEntry")}</h1>
         {pending ? (
           <BookConfirmation
             title={pending.title}
@@ -39,7 +41,7 @@ export default function ManualAddPage() {
             loading={loading}
           />
         ) : (
-          <BookForm onSubmit={setPending} submitLabel="Aperçu" />
+          <BookForm onSubmit={setPending} submitLabel={t("form_preview")} />
         )}
       </main>
     </div>

@@ -9,13 +9,18 @@ import { useBooksByStage } from "@/hooks/useBooks";
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import { roadmap } from "@/lib/roadmap";
 import { changelog } from "@/lib/changelog";
+import { useTranslation, useTheme } from "@/lib/preferences";
+import { plural } from "@/lib/i18n";
 
 export default function SettingsPage() {
   const booksByStage = useBooksByStage();
   const totalBooks = booksByStage
     ? STAGES.reduce((sum, s) => sum + booksByStage[s].length, 0)
     : 0;
+  const { t, locale, setLocale } = useTranslation();
+  const { theme, setTheme } = useTheme();
 
+  const [showPreferences, setShowPreferences] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(
@@ -38,22 +43,22 @@ export default function SettingsPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 px-4 py-8 max-w-lg mx-auto w-full">
-        <h1 className="font-serif text-2xl text-forest mb-8">Paramètres</h1>
+        <h1 className="font-serif text-2xl text-forest mb-8">{t("settings_title")}</h1>
 
         {booksByStage && (
           <section className="mb-8">
             <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
-              Votre bibliothèque
+              {t("settings_library")}
             </h2>
-            <div className="bg-white border border-forest/8 rounded-xl p-4 space-y-2">
+            <div className="bg-surface border border-forest/8 rounded-xl p-4 space-y-2">
               <p className="text-sm text-ink font-medium">
-                {totalBooks} livre{totalBooks !== 1 ? "s" : ""}
+                {plural(totalBooks, t("settings_bookCount_one"), t("settings_bookCount_other"))}
               </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 {STAGES.map((stage) => (
                   <div key={stage} className="flex items-center gap-1.5 text-xs text-forest/50">
                     <span>{STAGE_CONFIG[stage].emoji}</span>
-                    <span>{STAGE_CONFIG[stage].label}</span>
+                    <span>{t(STAGE_CONFIG[stage].labelKey)}</span>
                     <span className="ml-auto font-medium text-forest/70">
                       {booksByStage[stage].length}
                     </span>
@@ -66,13 +71,94 @@ export default function SettingsPage() {
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
-            Sauvegarde
+            {t("settings_backup")}
           </h2>
           <p className="text-xs text-forest/40">
-            Exportez votre bibliothèque en JSON pour la sauvegarder ou la transférer.
+            {t("settings_backupDesc")}
           </p>
           <ExportButton />
           <ImportButton />
+        </section>
+
+        <section className="mt-8">
+          <button
+            onClick={() => setShowPreferences((prev) => !prev)}
+            className="flex items-center gap-2 mb-3 group"
+          >
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
+              {t("preferences_title")}
+            </h2>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`text-forest/30 transition-transform ${
+                showPreferences ? "rotate-180" : ""
+              }`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {showPreferences && (
+            <div className="bg-surface border border-forest/8 rounded-xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-forest/70">{t("preferences_language")}</span>
+                <div className="flex rounded-lg overflow-hidden border border-forest/15">
+                  <button
+                    onClick={() => setLocale("fr")}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      locale === "fr"
+                        ? "bg-amber text-white"
+                        : "bg-transparent text-forest/60 hover:bg-forest/5"
+                    }`}
+                  >
+                    FR
+                  </button>
+                  <button
+                    onClick={() => setLocale("en")}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      locale === "en"
+                        ? "bg-amber text-white"
+                        : "bg-transparent text-forest/60 hover:bg-forest/5"
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-forest/70">{t("preferences_appearance")}</span>
+                <div className="flex rounded-lg overflow-hidden border border-forest/15">
+                  <button
+                    onClick={() => setTheme("light")}
+                    className={`px-3 py-1.5 text-sm transition-colors ${
+                      theme === "light"
+                        ? "bg-amber text-white"
+                        : "bg-transparent text-forest/60 hover:bg-forest/5"
+                    }`}
+                  >
+                    ☀️
+                  </button>
+                  <button
+                    onClick={() => setTheme("dark")}
+                    className={`px-3 py-1.5 text-sm transition-colors ${
+                      theme === "dark"
+                        ? "bg-amber text-white"
+                        : "bg-transparent text-forest/60 hover:bg-forest/5"
+                    }`}
+                  >
+                    🌙
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="mt-8">
@@ -81,7 +167,7 @@ export default function SettingsPage() {
             className="flex items-center gap-2 mb-3 group"
           >
             <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
-              Prochainement
+              {t("settings_roadmap")}
             </h2>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -101,8 +187,8 @@ export default function SettingsPage() {
             </svg>
           </button>
           {showRoadmap && <>
-            <div className="bg-white border border-forest/8 rounded-xl p-4 space-y-3">
-              {roadmap.map((item) => (
+            <div className="bg-surface border border-forest/8 rounded-xl p-4 space-y-3">
+              {roadmap[locale].map((item) => (
                 <div key={item.title} className="flex gap-3">
                   <span className="text-base leading-relaxed">{item.icon}</span>
                   <div>
@@ -113,13 +199,12 @@ export default function SettingsPage() {
               ))}
             </div>
             <p className="text-xs text-forest/30 mt-2 italic">
-              Ces fonctionnalités ne sont pas dans un ordre particulier.
-              Une idée ou une préférence ?{" "}
+              {t("settings_roadmapDisclaimer")}{" "}
               <a
-                href="mailto:contact@my-tsundoku.app?subject=%5BTsundoku%5D%20Suggestion"
+                href={`mailto:contact@my-tsundoku.app?subject=${encodeURIComponent("[Tsundoku] " + t("settings_mailtoSubject"))}`}
                 className="underline hover:text-forest/50 transition-colors"
               >
-                Me contacter
+                {t("contactMe")}
               </a>
             </p>
           </>}
@@ -131,7 +216,7 @@ export default function SettingsPage() {
             className="flex items-center gap-2 mb-3 group"
           >
             <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60">
-              Nouveautés
+              {t("settings_changelog")}
             </h2>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +241,7 @@ export default function SettingsPage() {
               return (
                 <div
                   key={entry.version}
-                  className="bg-white border border-forest/8 rounded-xl overflow-hidden"
+                  className="bg-surface border border-forest/8 rounded-xl overflow-hidden"
                 >
                   <button
                     onClick={() => toggleVersion(entry.version)}
@@ -168,7 +253,7 @@ export default function SettingsPage() {
                         ·{" "}
                         {new Date(
                           entry.date + "T00:00:00"
-                        ).toLocaleDateString("fr-FR", {
+                        ).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
@@ -194,7 +279,7 @@ export default function SettingsPage() {
                   </button>
                   {isExpanded && (
                     <ul className="px-4 pb-4 space-y-1">
-                      {entry.changes.map((change, i) => (
+                      {entry.changes[locale].map((change, i) => (
                         <li
                           key={i}
                           className="text-xs text-forest/50 flex gap-2"
@@ -213,11 +298,10 @@ export default function SettingsPage() {
 
         <section className="mt-12 pt-8 border-t border-forest/10">
           <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-2">
-            À propos
+            {t("settings_about")}
           </h2>
           <p className="text-xs text-forest/40 leading-relaxed">
-            My Tsundoku (積ん読) — l&apos;art d&apos;acquérir des livres et de les laisser s&apos;empiler.
-            Une application pour organiser votre collection personnelle de livres.
+            {t("settings_aboutDesc")}
           </p>
           <div className="flex items-center gap-3 mt-3">
             <a

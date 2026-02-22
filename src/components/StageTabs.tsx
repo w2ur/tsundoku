@@ -2,6 +2,7 @@
 
 import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import type { Stage } from "@/lib/types";
+import { useTranslation } from "@/lib/preferences";
 
 interface StageTabsProps {
   active: Stage;
@@ -11,6 +12,8 @@ interface StageTabsProps {
 }
 
 export default function StageTabs({ active, counts, onChange, searchActive }: StageTabsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex border-b border-forest/10">
       {STAGES.map((stage) => {
@@ -40,7 +43,7 @@ export default function StageTabs({ active, counts, onChange, searchActive }: St
             }`}
           >
             <span>{config.emoji}</span>
-            <span className="hidden sm:inline">{config.label}</span>
+            <span className="hidden sm:inline">{t(config.labelKey)}</span>
             <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-semibold transition-colors ${badgeClass}`}>
               {counts[stage]}
             </span>

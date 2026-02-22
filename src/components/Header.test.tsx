@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import Header from "./Header";
+import { PreferencesProvider } from "@/lib/preferences";
 
 // Mock next/navigation
 const mockBack = vi.fn();
@@ -18,34 +19,47 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/lib/db", () => ({
+  db: {
+    settings: {
+      get: vi.fn().mockResolvedValue(undefined),
+      put: vi.fn(),
+    },
+  },
+}));
+
 afterEach(() => {
   cleanup();
   mockBack.mockClear();
 });
 
+function renderWithPreferences(ui: React.ReactElement) {
+  return render(<PreferencesProvider>{ui}</PreferencesProvider>);
+}
+
 describe("Header", () => {
   it("renders the app name as a link to home", () => {
     mockPathname = "/";
-    render(<Header />);
+    renderWithPreferences(<Header />);
     const logo = screen.getByText("My Tsundoku");
     expect(logo.closest("a")?.getAttribute("href")).toBe("/");
   });
 
   it("does not show back arrow on home page", () => {
     mockPathname = "/";
-    render(<Header />);
+    renderWithPreferences(<Header />);
     expect(screen.queryByLabelText("Retour")).toBeNull();
   });
 
   it("shows back arrow on sub-pages", () => {
     mockPathname = "/settings";
-    render(<Header />);
+    renderWithPreferences(<Header />);
     expect(screen.getByLabelText("Retour")).toBeTruthy();
   });
 
   it("shows back arrow on nested sub-pages", () => {
     mockPathname = "/add/scan";
-    render(<Header />);
+    renderWithPreferences(<Header />);
     expect(screen.getByLabelText("Retour")).toBeTruthy();
   });
 
@@ -54,14 +68,14 @@ describe("Header", () => {
     const { user } = await import("@testing-library/user-event").then((m) => ({
       user: m.default.setup(),
     }));
-    render(<Header />);
+    renderWithPreferences(<Header />);
     await user.click(screen.getByLabelText("Retour"));
     expect(mockBack).toHaveBeenCalled();
   });
 
   it("renders settings link", () => {
     mockPathname = "/";
-    render(<Header />);
+    renderWithPreferences(<Header />);
     expect(screen.getByLabelText("Paramètres")).toBeTruthy();
   });
 });

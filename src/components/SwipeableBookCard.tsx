@@ -14,6 +14,7 @@ import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import { moveBookToPosition } from "@/lib/books";
 import { getSwipeThresholds, shouldConfirm, vibrate } from "@/lib/swipe";
 import type { Book } from "@/lib/types";
+import { useTranslation } from "@/lib/preferences";
 
 type SwipePhase = "idle" | "dragging" | "peeking" | "confirmed";
 
@@ -24,6 +25,7 @@ let activePeekingDismiss: (() => void) | null = null;
 export default function SwipeableBookCard({ book }: { book: Book }) {
   const [phase, setPhase] = useState<SwipePhase>("idle");
   const x = useMotionValue(0);
+  const { t } = useTranslation();
   const cardRef = useRef<HTMLDivElement>(null);
   const cardWidthRef = useRef(0);
   const [scope, animate] = useAnimate();
@@ -224,7 +226,7 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
           <div className="flex flex-col items-center gap-1 overflow-hidden">
             <span className="text-xl">{STAGE_CONFIG[visibleTarget].emoji}</span>
             <span className={`text-xs font-medium text-center leading-tight line-clamp-2 ${STAGE_CONFIG[visibleTarget].color}`}>
-              {STAGE_CONFIG[visibleTarget].label}
+              {t(STAGE_CONFIG[visibleTarget].labelKey)}
             </span>
           </div>
         </motion.div>
@@ -245,7 +247,7 @@ export default function SwipeableBookCard({ book }: { book: Book }) {
       >
         <Link
           href={`/book/${book.id}`}
-          className="group flex gap-3 p-3 rounded-xl bg-white border border-forest/5 shadow-sm select-none"
+          className="group flex gap-3 p-3 rounded-xl bg-surface border border-forest/5 shadow-sm select-none"
           style={{ WebkitTouchCallout: "none" }}
           onClick={(e) => {
             // Prevent navigation during swipe/peeking

@@ -11,6 +11,7 @@ import { STAGES, STAGE_CONFIG } from "@/lib/constants";
 import type { Stage, Book } from "@/lib/types";
 import { matchesSearch } from "@/lib/search";
 import { getUniqueQuotes } from "@/lib/quotes";
+import { useTranslation } from "@/lib/preferences";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
 import BookCard from "./BookCard";
@@ -22,6 +23,7 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const stageParam = searchParams.get("stage");
@@ -110,9 +112,9 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   }, [filteredByStage, searchQuery, activeTab, isMobile, setActiveTab]);
 
   const uniqueQuotes = useMemo(() => {
-    const quotes = getUniqueQuotes(STAGES.length);
+    const quotes = getUniqueQuotes(STAGES.length, locale);
     return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
-  }, []);
+  }, [locale]);
 
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
@@ -133,7 +135,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
   if (!filteredByStage) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-forest/30 text-sm">Chargement...</div>
+        <div className="animate-pulse text-forest/30 text-sm">{t("loading")}</div>
       </div>
     );
   }
@@ -161,7 +163,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
               >
                 {books.length === 0 ? (
                   isSearching ? (
-                    <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
+                    <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                   ) : (
                     <EmptyState quote={uniqueQuotes[activeTab]} />
                   )
@@ -205,7 +207,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
               >
                 <div className="flex items-center gap-2 px-3 py-2 mb-2">
                   <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
-                    {STAGE_CONFIG[stage].label}
+                    {t(STAGE_CONFIG[stage].labelKey)}
                   </h2>
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
                     {counts[stage]}
@@ -213,7 +215,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                   <Link
                     href={`/add?stage=${stage}`}
                     className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
-                    aria-label={`Ajouter un livre à ${STAGE_CONFIG[stage].label}`}
+                    aria-label={t("kanban_addBookToStage").replace("{stage}", t(STAGE_CONFIG[stage].labelKey))}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14" />
@@ -224,7 +226,7 @@ export default function KanbanBoard({ searchQuery = "" }: KanbanBoardProps) {
                 <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
                   {filteredByStage[stage].length === 0 ? (
                     searchQuery.trim() ? (
-                      <p className="text-center text-sm text-forest/30 py-8">Aucun résultat</p>
+                      <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                     ) : (
                       <EmptyState quote={uniqueQuotes[stage]} />
                     )

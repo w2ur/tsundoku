@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
+import { useTranslation } from "@/lib/preferences";
 
 export interface BookFormData {
   title: string;
@@ -17,7 +18,8 @@ interface Props {
   submitLabel?: string;
 }
 
-export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }: Props) {
+export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [author, setAuthor] = useState(initial?.author ?? "");
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
@@ -81,12 +83,12 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
   }
 
   const inputClass =
-    "w-full px-3 py-2.5 bg-white border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
+    "w-full px-3 py-2.5 bg-surface border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-forest/70 mb-1">Titre</label>
+        <label className="block text-sm font-medium text-forest/70 mb-1">{t("form_title")}</label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -101,7 +103,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
                 handleSearch();
               }
             }}
-            placeholder="Titre du livre"
+            placeholder={t("form_titlePlaceholder")}
             className={inputClass}
           />
           <button
@@ -110,7 +112,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
             disabled={searchLoading || title.length < 2}
             className="flex-shrink-0 px-3 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            {searchLoading ? "..." : "Rechercher"}
+            {searchLoading ? "..." : t("search")}
           </button>
         </div>
       </div>
@@ -142,32 +144,32 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
 
       {hasSearched && !searchLoading && searchResults.length === 0 && (
         <p className="text-xs text-forest/40 text-center">
-          Aucun résultat sur Open Library.{" "}
+          {t("form_noResults")}{" "}
           <a
             href="https://openlibrary.org/books/add"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-forest/60"
           >
-            Ajoutez-le
+            {t("form_addToOpenLibrary")}
           </a>
         </p>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-forest/70 mb-1">Auteur</label>
+        <label className="block text-sm font-medium text-forest/70 mb-1">{t("form_author")}</label>
         <input
           type="text"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          placeholder="Nom de l'auteur"
+          placeholder={t("form_authorPlaceholder")}
           className={inputClass}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">
-          Couverture
+          {t("form_cover")}
         </label>
         <input
           ref={fileInputRef}
@@ -180,7 +182,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
           <div className="flex items-start gap-3">
             <img
               src={coverUrl}
-              alt="Aperçu couverture"
+              alt={t("form_coverPreviewAlt")}
               className="w-16 h-24 object-cover rounded-lg shadow-sm border border-forest/10"
               onError={(e) => (e.currentTarget.style.display = "none")}
             />
@@ -189,7 +191,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
               onClick={() => setCoverUrl("")}
               className="text-xs text-forest/40 underline hover:text-forest/60 mt-1"
             >
-              Changer
+              {t("form_coverChange")}
             </button>
           </div>
         ) : (
@@ -205,7 +207,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="flex-shrink-0 px-3 py-2.5 border border-forest/15 rounded-lg text-forest/50 hover:bg-cream transition-colors"
-              title="Choisir une image"
+              title={t("form_coverChooseImage")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
@@ -218,7 +220,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
 
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">
-          Lien boutique <span className="font-normal text-forest/40">(optionnel)</span>
+          {t("form_storeUrl")} <span className="font-normal text-forest/40">{t("optional")}</span>
         </label>
         <input
           type="url"
@@ -231,12 +233,12 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
 
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">
-          Notes <span className="font-normal text-forest/40">(optionnel)</span>
+          {t("form_notes")} <span className="font-normal text-forest/40">{t("optional")}</span>
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Recommandé par..., offert par..."
+          placeholder={t("form_notesPlaceholder")}
           rows={2}
           className={`${inputClass} resize-none`}
         />
@@ -247,7 +249,7 @@ export default function BookForm({ initial, onSubmit, submitLabel = "Ajouter" }:
         disabled={!title.trim()}
         className="w-full py-3 bg-forest text-paper rounded-lg font-medium text-sm hover:bg-forest/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        {submitLabel}
+        {submitLabel ?? t("form_add")}
       </button>
     </form>
   );

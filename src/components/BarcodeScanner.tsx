@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "@/lib/preferences";
 
 interface Props {
   onScan: (isbn: string) => void;
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function BarcodeScanner({ onScan, onError }: Props) {
+  const { t } = useTranslation();
   const scannerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"init" | "scanning" | "needs-gesture" | "error">("init");
   const html5QrCodeRef = useRef<import("html5-qrcode").Html5Qrcode | null>(null);
@@ -17,13 +19,16 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
   onScanRef.current = onScan;
   onErrorRef.current = onError;
 
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const startScanner = useCallback(async () => {
     if (!scannerRef.current) return;
 
     // Check if camera API is available
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus("error");
-      onErrorRef.current?.("Caméra non disponible sur cet appareil.");
+      onErrorRef.current?.(tRef.current("scanner_notAvailable"));
       return;
     }
 
@@ -85,7 +90,7 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
       await startScanner();
     } catch {
       setStatus("error");
-      onErrorRef.current?.("Impossible d'accéder à la caméra. Vérifiez les permissions dans les réglages.");
+      onErrorRef.current?.(tRef.current("scanner_accessError"));
     }
   }
 
@@ -98,23 +103,23 @@ export default function BarcodeScanner({ onScan, onError }: Props) {
       />
       {status === "init" && (
         <div className="flex items-center justify-center h-48 bg-cream rounded-xl">
-          <p className="text-sm text-forest/30">Initialisation de la caméra...</p>
+          <p className="text-sm text-forest/30">{t("scanner_init")}</p>
         </div>
       )}
       {status === "needs-gesture" && (
         <div className="flex flex-col items-center justify-center h-48 bg-cream rounded-xl gap-3">
-          <p className="text-sm text-forest/50">Autorisation caméra requise</p>
+          <p className="text-sm text-forest/50">{t("scanner_permissionRequired")}</p>
           <button
             onClick={handleManualStart}
             className="px-5 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 transition-colors"
           >
-            Activer la caméra
+            {t("scanner_activate")}
           </button>
         </div>
       )}
       {status === "error" && (
         <div className="flex items-center justify-center h-48 bg-cream rounded-xl">
-          <p className="text-sm text-forest/40">Caméra indisponible. Utilisez la saisie manuelle.</p>
+          <p className="text-sm text-forest/40">{t("scanner_unavailable")}</p>
         </div>
       )}
     </div>

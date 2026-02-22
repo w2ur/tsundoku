@@ -12,19 +12,21 @@ import BookForm from "@/components/BookForm";
 import type { BookFormData } from "@/components/BookForm";
 import { useBook } from "@/hooks/useBooks";
 import { updateBook } from "@/lib/books";
+import { useTranslation } from "@/lib/preferences";
 
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const book = useBook(id);
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const { t } = useTranslation();
 
   if (book === undefined) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-forest/30 text-sm">Chargement...</p>
+          <p className="text-forest/30 text-sm">{t("loading")}</p>
         </div>
       </div>
     );
@@ -35,7 +37,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-forest/40 text-sm">Livre introuvable</p>
+          <p className="text-forest/40 text-sm">{t("book_notFound")}</p>
         </div>
       </div>
     );
@@ -62,13 +64,13 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                   storeUrl: book.storeUrl,
                 }}
                 onSubmit={handleSave}
-                submitLabel="Enregistrer"
+                submitLabel={t("form_save")}
               />
               <button
                 onClick={() => setEditing(false)}
                 className="w-full max-w-xs py-2 border border-forest/15 rounded-lg text-xs text-forest/60 hover:bg-cream transition-colors"
               >
-                Annuler
+                {t("cancel")}
               </button>
             </>
           ) : (
@@ -103,7 +105,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 onClick={() => setEditing(true)}
                 className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
               >
-                Modifier
+                {t("book_edit")}
               </button>
             </>
           )}
@@ -124,7 +126,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                   <polyline points="15 3 21 3 21 9" />
                   <line x1="10" x2="21" y1="14" y2="3" />
                 </svg>
-                Voir en boutique
+                {t("book_viewStore")}
               </a>
             </div>
           )}

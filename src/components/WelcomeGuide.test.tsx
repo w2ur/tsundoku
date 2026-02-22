@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { PreferencesProvider } from "@/lib/preferences";
 
 const { mockPut, mockQueryResult } = vi.hoisted(() => ({
   mockPut: vi.fn(),
@@ -14,7 +15,7 @@ vi.mock("dexie-react-hooks", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     settings: {
-      get: vi.fn(),
+      get: vi.fn().mockResolvedValue(undefined),
       put: mockPut,
     },
   },
@@ -28,30 +29,34 @@ afterEach(() => {
   mockQueryResult.current = undefined;
 });
 
+function renderWithPreferences(ui: React.ReactElement) {
+  return render(<PreferencesProvider>{ui}</PreferencesProvider>);
+}
+
 describe("WelcomeGuide", () => {
   it("renders nothing while loading", () => {
     mockQueryResult.current = undefined;
-    const { container } = render(<WelcomeGuide />);
+    const { container } = renderWithPreferences(<WelcomeGuide />);
     expect(container.innerHTML).toBe("");
   });
 
   it("renders the guide when hasSeenWelcome key does not exist", () => {
     mockQueryResult.current = null;
-    render(<WelcomeGuide />);
+    renderWithPreferences(<WelcomeGuide />);
     expect(screen.getByText("Bienvenue sur My Tsundoku")).toBeTruthy();
     expect(screen.getByText("C'est parti !")).toBeTruthy();
   });
 
   it("renders nothing when hasSeenWelcome is true", () => {
     mockQueryResult.current = { key: "hasSeenWelcome", value: true };
-    const { container } = render(<WelcomeGuide />);
+    const { container } = renderWithPreferences(<WelcomeGuide />);
     expect(container.innerHTML).toBe("");
   });
 
   it("dismisses the guide when the button is clicked", async () => {
     mockQueryResult.current = null;
     const user = userEvent.setup();
-    render(<WelcomeGuide />);
+    renderWithPreferences(<WelcomeGuide />);
     await user.click(screen.getByText("C'est parti !"));
     expect(mockPut).toHaveBeenCalledWith({
       key: "hasSeenWelcome",
@@ -63,7 +68,7 @@ describe("WelcomeGuide", () => {
   it("dismisses the guide when the backdrop is clicked", async () => {
     mockQueryResult.current = null;
     const user = userEvent.setup();
-    render(<WelcomeGuide />);
+    renderWithPreferences(<WelcomeGuide />);
     const backdrop = document.querySelector(".bg-forest\\/30");
     expect(backdrop).toBeTruthy();
     await user.click(backdrop!);

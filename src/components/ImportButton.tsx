@@ -3,8 +3,11 @@
 import { useState, useRef } from "react";
 import { parseBackup } from "@/lib/backup";
 import { importBooks } from "@/lib/books";
+import { useTranslation } from "@/lib/preferences";
+import { plural } from "@/lib/i18n";
 
 export default function ImportButton() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"idle" | "confirm" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [bookCount, setBookCount] = useState(0);
@@ -36,7 +39,7 @@ export default function ImportButton() {
   async function handleImport(mode: "merge" | "replace") {
     if (!pendingBooks) return;
     await importBooks(pendingBooks, mode);
-    setMessage(`${bookCount} livre${bookCount > 1 ? "s" : ""} importé${bookCount > 1 ? "s" : ""}`);
+    setMessage(plural(bookCount, t("import_booksImported_one"), t("import_booksImported_other")));
     setStatus("success");
     setPendingBooks(null);
   }
@@ -45,7 +48,7 @@ export default function ImportButton() {
     <div className="space-y-3">
       {status === "idle" && (
         <label className="block w-full py-3 border border-forest/15 rounded-lg font-medium text-sm text-center text-forest/60 cursor-pointer hover:bg-cream transition-colors">
-          Importer une sauvegarde
+          {t("import_backup")}
           <input
             ref={fileRef}
             type="file"
@@ -57,47 +60,47 @@ export default function ImportButton() {
       )}
 
       {status === "confirm" && (
-        <div className="space-y-3 p-4 bg-white border border-forest/10 rounded-xl">
+        <div className="space-y-3 p-4 bg-surface border border-forest/10 rounded-xl">
           <p className="text-sm text-ink">
-            {bookCount} livre{bookCount > 1 ? "s" : ""} trouvé{bookCount > 1 ? "s" : ""}.
+            {plural(bookCount, t("import_booksFound_one"), t("import_booksFound_other"))}
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => handleImport("merge")}
               className="flex-1 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 transition-colors"
             >
-              Fusionner
+              {t("import_merge")}
             </button>
             <button
               onClick={() => handleImport("replace")}
               className="flex-1 py-2.5 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
             >
-              Remplacer tout
+              {t("import_replaceAll")}
             </button>
           </div>
           <button
             onClick={() => { setStatus("idle"); setPendingBooks(null); }}
             className="w-full py-2 text-sm text-forest/40 hover:text-forest/60"
           >
-            Annuler
+            {t("cancel")}
           </button>
         </div>
       )}
 
       {status === "success" && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 text-center">
+        <div className="p-3 bg-success-bg border border-success-border rounded-lg text-sm text-success-text text-center">
           {message}
           <button onClick={() => setStatus("idle")} className="block mx-auto mt-2 text-xs underline">
-            OK
+            {t("import_ok")}
           </button>
         </div>
       )}
 
       {status === "error" && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 text-center">
+        <div className="p-3 bg-error-bg border border-error-border rounded-lg text-sm text-error-text text-center">
           {message}
           <button onClick={() => setStatus("idle")} className="block mx-auto mt-2 text-xs underline">
-            Réessayer
+            {t("import_retry")}
           </button>
         </div>
       )}

@@ -6,7 +6,7 @@ describe("STAGE_CONFIG", () => {
   it("has a config entry for every stage", () => {
     for (const stage of STAGES) {
       expect(STAGE_CONFIG[stage]).toBeDefined();
-      expect(STAGE_CONFIG[stage].label).toBeTruthy();
+      expect(STAGE_CONFIG[stage].labelKey).toBeTruthy();
       expect(STAGE_CONFIG[stage].emoji).toBeTruthy();
       expect(STAGE_CONFIG[stage].color).toBeTruthy();
       expect(STAGE_CONFIG[stage].bgColor).toBeTruthy();
@@ -36,10 +36,10 @@ describe("STAGE_TRANSITIONS", () => {
     }
   });
 
-  it("all transitions have a label", () => {
+  it("all transitions have a labelKey", () => {
     for (const stage of STAGES) {
       for (const transition of STAGE_TRANSITIONS[stage]) {
-        expect(transition.label).toBeTruthy();
+        expect(transition.labelKey).toBeTruthy();
       }
     }
   });

@@ -2,9 +2,11 @@
 
 import { getRandomQuote, type Quote } from "@/lib/quotes";
 import { useMemo } from "react";
+import { useTranslation } from "@/lib/preferences";
 
 export default function EmptyState({ quote: quoteProp }: { quote?: Quote }) {
-  const fallback = useMemo(() => getRandomQuote(), []);
+  const { locale } = useTranslation();
+  const fallback = useMemo(() => getRandomQuote(locale), [locale]);
   const quote = quoteProp ?? fallback;
 
   return (

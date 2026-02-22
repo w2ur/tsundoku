@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslation } from "@/lib/preferences";
 
 interface HeaderProps {
   searchQuery?: string;
@@ -11,6 +12,7 @@ interface HeaderProps {
 }
 
 export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
@@ -69,13 +71,13 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
               value={searchQuery ?? ""}
               onChange={(e) => onSearchChange?.(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Rechercher un livre..."
+              placeholder={t("header_searchPlaceholder")}
               className="flex-1 bg-transparent text-forest text-sm outline-none placeholder:text-forest/30"
             />
             <button
               onClick={handleClose}
               className="p-1 rounded-md hover:bg-forest/5 transition-colors text-forest/40 hover:text-forest/60"
-              aria-label="Fermer la recherche"
+              aria-label={t("header_closeSearch")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +108,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
               <button
                 onClick={() => router.back()}
                 className="p-2 -ml-2 rounded-lg hover:bg-forest/5 transition-colors text-forest"
-                aria-label="Retour"
+                aria-label={t("header_back")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +141,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
           <button
             onClick={() => setIsSearchOpen(true)}
             className="p-2 rounded-lg hover:bg-forest/5 transition-colors"
-            aria-label="Rechercher"
+            aria-label={t("header_search")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -161,7 +163,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
         <Link
           href="/settings"
           className="p-2 rounded-lg hover:bg-forest/5 transition-colors"
-          aria-label="Paramètres"
+          aria-label={t("header_settings")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

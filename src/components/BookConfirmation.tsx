@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "@/lib/preferences";
 
 interface Props {
   title: string;
@@ -24,11 +25,12 @@ export default function BookConfirmation({
   onCancel,
   loading,
 }: Props) {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState(initialNotes ?? "");
   const [storeUrl, setStoreUrl] = useState(initialStoreUrl ?? "");
 
   const inputClass =
-    "w-full px-3 py-2.5 bg-white border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
+    "w-full px-3 py-2.5 bg-surface border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
 
   return (
     <div className="flex flex-col items-center gap-6 py-6">
@@ -59,7 +61,7 @@ export default function BookConfirmation({
       <div className="w-full max-w-xs space-y-3">
         <div>
           <label className="block text-sm font-medium text-forest/70 mb-1">
-            Lien boutique <span className="font-normal text-forest/40">(optionnel)</span>
+            {t("form_storeUrl")} <span className="font-normal text-forest/40">{t("optional")}</span>
           </label>
           <input
             type="url"
@@ -71,12 +73,12 @@ export default function BookConfirmation({
         </div>
         <div>
           <label className="block text-sm font-medium text-forest/70 mb-1">
-            Notes <span className="font-normal text-forest/40">(optionnel)</span>
+            {t("form_notes")} <span className="font-normal text-forest/40">{t("optional")}</span>
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Recommandé par..., offert par..."
+            placeholder={t("form_notesPlaceholder")}
             rows={2}
             className={`${inputClass} resize-none`}
           />
@@ -88,7 +90,7 @@ export default function BookConfirmation({
           onClick={onCancel}
           className="flex-1 py-2.5 border border-forest/15 rounded-lg text-sm font-medium text-forest/60 hover:bg-cream transition-colors"
         >
-          Annuler
+          {t("cancel")}
         </button>
         <button
           onClick={() =>
@@ -100,7 +102,7 @@ export default function BookConfirmation({
           disabled={loading}
           className="flex-1 py-2.5 bg-forest text-paper rounded-lg text-sm font-medium hover:bg-forest/90 disabled:opacity-50 transition-colors"
         >
-          {loading ? "..." : "Ajouter"}
+          {loading ? "..." : t("form_add")}
         </button>
       </div>
     </div>

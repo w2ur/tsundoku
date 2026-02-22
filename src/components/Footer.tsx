@@ -1,4 +1,9 @@
+"use client";
+
+import { useTranslation } from "@/lib/preferences";
+
 export default function Footer() {
+  const { t } = useTranslation();
   const version = process.env.NEXT_PUBLIC_APP_VERSION;
 
   return (
@@ -22,10 +27,10 @@ export default function Footer() {
       </div>
       <div>
         <a
-          href="mailto:contact@my-tsundoku.app?subject=%5BTsundoku%5D%20Retour%20utilisateur"
+          href={`mailto:contact@my-tsundoku.app?subject=${encodeURIComponent("[Tsundoku] " + t("footer_mailtoSubject"))}`}
           className="underline hover:text-forest/50 transition-colors"
         >
-          Me contacter
+          {t("contactMe")}
         </a>
       </div>
     </footer>

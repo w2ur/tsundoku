@@ -3,6 +3,7 @@
 import { STAGE_TRANSITIONS } from "@/lib/constants";
 import { moveBookToPosition } from "@/lib/books";
 import type { Stage } from "@/lib/types";
+import { useTranslation } from "@/lib/preferences";
 
 interface Props {
   bookId: string;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function StageActions({ bookId, stage, onMoved }: Props) {
   const transitions = STAGE_TRANSITIONS[stage];
+  const { t } = useTranslation();
 
   async function handleMove(nextStage: Stage) {
     await moveBookToPosition(bookId, nextStage, 0);
@@ -20,13 +22,13 @@ export default function StageActions({ bookId, stage, onMoved }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      {transitions.map((t) => (
+      {transitions.map((transition) => (
         <button
-          key={t.next}
-          onClick={() => handleMove(t.next)}
+          key={transition.next}
+          onClick={() => handleMove(transition.next)}
           className="w-full py-3 bg-forest text-paper rounded-lg font-medium text-sm hover:bg-forest/90 transition-colors"
         >
-          {t.label}
+          {t(transition.labelKey)}
         </button>
       ))}
     </div>
