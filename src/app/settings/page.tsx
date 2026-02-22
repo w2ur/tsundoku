@@ -112,7 +112,7 @@ export default function SettingsPage() {
                 <div className="flex rounded-lg overflow-hidden border border-forest/15">
                   <button
                     onClick={() => setLocale("fr")}
-                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`w-10 py-1.5 text-xs font-medium transition-colors ${
                       locale === "fr"
                         ? "bg-amber text-white"
                         : "bg-transparent text-forest/60 hover:bg-forest/5"
@@ -122,7 +122,7 @@ export default function SettingsPage() {
                   </button>
                   <button
                     onClick={() => setLocale("en")}
-                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`w-10 py-1.5 text-xs font-medium transition-colors ${
                       locale === "en"
                         ? "bg-amber text-white"
                         : "bg-transparent text-forest/60 hover:bg-forest/5"
@@ -137,7 +137,7 @@ export default function SettingsPage() {
                 <div className="flex rounded-lg overflow-hidden border border-forest/15">
                   <button
                     onClick={() => setTheme("light")}
-                    className={`px-3 py-1.5 text-sm transition-colors ${
+                    className={`w-10 py-1.5 text-sm transition-colors ${
                       theme === "light"
                         ? "bg-amber text-white"
                         : "bg-transparent text-forest/60 hover:bg-forest/5"
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                   </button>
                   <button
                     onClick={() => setTheme("dark")}
-                    className={`px-3 py-1.5 text-sm transition-colors ${
+                    className={`w-10 py-1.5 text-sm transition-colors ${
                       theme === "dark"
                         ? "bg-amber text-white"
                         : "bg-transparent text-forest/60 hover:bg-forest/5"
