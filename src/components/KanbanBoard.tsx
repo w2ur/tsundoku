@@ -163,7 +163,7 @@ export default function KanbanBoard({
 
     // Small delay to let DOM update after search clears and tab switches
     const timer = setTimeout(() => {
-      const element = document.querySelector(`[data-book-id="${scrollToBookId}"]`);
+      const element = document.querySelector(`[data-book-id="${CSS.escape(scrollToBookId)}"]`);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         element.classList.add("glow-highlight");
