@@ -5,6 +5,7 @@ const fr = {
   optional: "(optionnel)",
   noResults: "Aucun résultat",
   contactMe: "Contact",
+  footer_madeBy: "Fait avec soin par",
   stage_a_acheter: "Livres à acheter",
   stage_tsundoku: "Tsundoku",
   stage_bibliotheque: "Bibliothèque",

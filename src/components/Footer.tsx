@@ -8,7 +8,7 @@ export default function Footer() {
 
   return (
     <footer className="py-1.5 md:py-3 flex-shrink-0 text-center text-[11px] text-forest/30">
-      Made with care by{" "}
+      {t("footer_madeBy")}{" "}
       <a
         href="https://william.revah.paris"
         target="_blank"

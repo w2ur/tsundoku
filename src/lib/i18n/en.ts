@@ -7,6 +7,7 @@ const en: Record<TranslationKeys, string> = {
   optional: "(optional)",
   noResults: "No results",
   contactMe: "Contact",
+  footer_madeBy: "Made with care by",
   stage_a_acheter: "Wishlist",
   stage_tsundoku: "Tsundoku",
   stage_bibliotheque: "Library",
