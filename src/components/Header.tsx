@@ -31,6 +31,10 @@ export default function Header({ searchQuery, onSearchChange, isSearchOpen = fal
     inputRef.current?.blur();
     onSearchOpenChange?.(false);
     onSearchChange?.("");
+    // iOS Safari safety net: force viewport reset after keyboard dismiss
+    setTimeout(() => {
+      window.scrollTo(0, window.scrollY);
+    }, 100);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -72,6 +76,10 @@ export default function Header({ searchQuery, onSearchChange, isSearchOpen = fal
               value={searchQuery ?? ""}
               onChange={(e) => onSearchChange?.(e.target.value)}
               onKeyDown={handleKeyDown}
+              onBlur={() => {
+                // iOS Safari: reset viewport after keyboard dismiss
+                setTimeout(() => window.scrollTo(0, window.scrollY), 100);
+              }}
               placeholder={t("header_searchPlaceholder")}
               className="flex-1 bg-transparent text-forest text-sm outline-none placeholder:text-forest/30"
             />

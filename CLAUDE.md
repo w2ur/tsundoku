@@ -10,7 +10,7 @@ Tsundoku is a PWA for organizing personal book collections using a Kanban-style 
 - **Styling**: Tailwind CSS v4
 - **Database**: Dexie.js (IndexedDB) — all data stored client-side
 - **PWA**: Serwist (configurator mode) — `serwist.config.js` + `serwist build` post-step
-- **Drag & Drop**: @hello-pangea/dnd
+- **Drag & Drop**: @dnd-kit/core + @dnd-kit/sortable (stable v5/v6)
 - **Animations**: motion
 - **Barcode Scanning**: html5-qrcode
 - **Testing**: Vitest + @testing-library/react

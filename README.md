@@ -8,7 +8,7 @@ Tsundoku (積ん読) is a PWA for organizing personal book collections. Inspired
 - **Tailwind CSS v4** for styling
 - **Dexie.js** for IndexedDB (client-side storage)
 - **Serwist** for PWA / service worker (configurator mode)
-- **@hello-pangea/dnd** for drag-and-drop
+- **@dnd-kit/core + @dnd-kit/sortable** for drag-and-drop
 - **motion** for animations
 - **html5-qrcode** for barcode scanning
 - **Vitest** for testing
