@@ -234,6 +234,7 @@ export default function KanbanBoard({
         const over = event.over;
         if (!over) return prev;
         const overId = over.id as string;
+        if (activeId === overId) return prev;
 
         // Find which container has the active item
         let activeContainer: Stage | null = null;
@@ -257,7 +258,18 @@ export default function KanbanBoard({
             }
           }
         }
-        if (!overContainer || activeContainer === overContainer) return prev;
+        if (!overContainer) return prev;
+
+        if (activeContainer === overContainer) {
+          // Within-container: reorder
+          const items = [...prev[activeContainer]];
+          const activeIndex = items.indexOf(activeId);
+          const overIndex = items.indexOf(overId);
+          if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) return prev;
+          items.splice(activeIndex, 1);
+          items.splice(overIndex, 0, activeId);
+          return { ...prev, [activeContainer]: items };
+        }
 
         // Cross-container: move item from source to target
         const newItems = { ...prev };
@@ -296,30 +308,25 @@ export default function KanbanBoard({
       }
 
       const bookId = active.id as string;
-      const overId = over.id as string;
 
-      // Find target stage from virtualItems
+      // Find target stage and position from virtualItems
       let targetStage: Stage | null = null;
+      let bookIndex = -1;
       for (const stage of STAGES) {
-        if (currentVirtualItems[stage].includes(bookId)) {
+        const idx = currentVirtualItems[stage].indexOf(bookId);
+        if (idx !== -1) {
           targetStage = stage;
+          bookIndex = idx;
           break;
         }
       }
-      if (!targetStage) {
+      if (!targetStage || bookIndex === -1) {
         setVirtualItems(null);
         return;
       }
 
-      // Calculate target index (position in array excluding the dragged item)
-      const targetWithout = currentVirtualItems[targetStage].filter((id) => id !== bookId);
-      let targetIndex: number;
-      if (STAGES.includes(overId as Stage)) {
-        targetIndex = targetWithout.length;
-      } else {
-        const overIndex = targetWithout.indexOf(overId);
-        targetIndex = overIndex !== -1 ? overIndex : targetWithout.length;
-      }
+      // targetIndex = book's position in virtualItems (matches what moveBookToPosition expects)
+      const targetIndex = bookIndex;
 
       // Skip if same position
       if (filteredByStage) {
