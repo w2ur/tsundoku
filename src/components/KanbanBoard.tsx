@@ -280,13 +280,20 @@ export default function KanbanBoard({
     async (event: DragEndEvent) => {
       const currentVirtualItems = virtualItems;
       setActiveBook(null);
-      setVirtualItems(null);
       initialVirtualItemsRef.current = null;
+      // Keep virtualItems alive so the card stays in the target column
+      // during the DragOverlay drop animation and DB write
 
-      if (isSearching || !currentVirtualItems) return;
+      if (isSearching || !currentVirtualItems) {
+        setVirtualItems(null);
+        return;
+      }
 
       const { active, over } = event;
-      if (!over) return;
+      if (!over) {
+        setVirtualItems(null);
+        return;
+      }
 
       const bookId = active.id as string;
       const overId = over.id as string;
@@ -299,7 +306,10 @@ export default function KanbanBoard({
           break;
         }
       }
-      if (!targetStage) return;
+      if (!targetStage) {
+        setVirtualItems(null);
+        return;
+      }
 
       // Calculate target index (position in array excluding the dragged item)
       const targetWithout = currentVirtualItems[targetStage].filter((id) => id !== bookId);
@@ -316,13 +326,17 @@ export default function KanbanBoard({
         for (const stage of STAGES) {
           const idx = filteredByStage[stage].findIndex((b) => b.id === bookId);
           if (idx !== -1) {
-            if (stage === targetStage && idx === targetIndex) return;
+            if (stage === targetStage && idx === targetIndex) {
+              setVirtualItems(null);
+              return;
+            }
             break;
           }
         }
       }
 
       await moveBookToPosition(bookId, targetStage, targetIndex);
+      setVirtualItems(null);
     },
     [isSearching, virtualItems, filteredByStage]
   );
@@ -337,10 +351,14 @@ export default function KanbanBoard({
       setActiveBook(null);
       setSlideTarget(null);
       slideDirection.current = null;
-      setVirtualItems(null);
       initialVirtualItemsRef.current = null;
+      // Keep virtualItems alive during drop animation and DB write
 
-      if (isSearching || !currentVirtualItems) return;
+      if (isSearching || !currentVirtualItems) {
+        setVirtualItems(null);
+        return;
+      }
+
       const { active, over } = event;
       const bookId = active.id as string;
 
@@ -351,21 +369,28 @@ export default function KanbanBoard({
         if (over && over.id !== bookId && targetItems.includes(over.id as string)) {
           targetIndex = targetItems.indexOf(over.id as string);
         } else {
-          // Default to top of column
           targetIndex = 0;
         }
         await moveBookToPosition(bookId, currentSlideTarget, targetIndex);
+        setVirtualItems(null);
         setActiveTab(currentSlideTarget);
         return;
       }
 
       // Vertical reorder within current tab
-      if (!over || active.id === over.id) return;
+      if (!over || active.id === over.id) {
+        setVirtualItems(null);
+        return;
+      }
       const items = currentVirtualItems[activeTab];
       const targetWithout = items.filter((id) => id !== bookId);
       const overIndex = targetWithout.indexOf(over.id as string);
-      if (overIndex === -1) return;
+      if (overIndex === -1) {
+        setVirtualItems(null);
+        return;
+      }
       await moveBookToPosition(bookId, activeTab, overIndex);
+      setVirtualItems(null);
     },
     [isSearching, virtualItems, activeTab, slideTarget, setActiveTab]
   );
