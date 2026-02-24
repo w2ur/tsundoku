@@ -245,6 +245,44 @@ export default function KanbanBoard({
     [isSearching, filteredByStage]
   );
 
+  const [slideTarget, setSlideTarget] = useState<Stage | null>(null);
+  const slideDirection = useRef<"left" | "right" | null>(null);
+
+  const handleMobileDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const currentSlideTarget = slideTarget;
+      setActiveBook(null);
+      setSlideTarget(null);
+      slideDirection.current = null;
+
+      if (isSearching) return;
+      const { active, over } = event;
+      const bookId = active.id as string;
+
+      // If we have a slide target, move to adjacent stage
+      if (currentSlideTarget) {
+        await moveBookToPosition(bookId, currentSlideTarget, 0);
+        setActiveTab(currentSlideTarget);
+        return;
+      }
+
+      // Otherwise, vertical reorder within current tab
+      if (!over || active.id === over.id) return;
+      const books = filteredByStage ? filteredByStage[activeTab] : [];
+      const overIndex = books.findIndex((b) => b.id === over.id);
+      if (overIndex === -1) return;
+      await moveBookToPosition(bookId, activeTab, overIndex);
+    },
+    [isSearching, filteredByStage, activeTab, slideTarget, setActiveTab]
+  );
+
+  const handleDragMove = useCallback(
+    () => {
+      // Column slide-in logic — implemented in Task 5
+    },
+    []
+  );
+
   const handleSearchResultClick = useCallback(
     (e: React.MouseEvent, book: Book) => {
       if (!searchQuery.trim()) return;
@@ -301,25 +339,50 @@ export default function KanbanBoard({
     const books = filteredByStage[activeTab];
 
     return (
-      <div className="flex flex-col h-full">
-        <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {books.length === 0 ? (
-            isSearching ? (
-              <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
-            ) : (
-              <EmptyState quote={uniqueQuotes[activeTab]} />
-            )
-          ) : (
-            books.map((book) => (
-              <div key={book.id} data-book-id={book.id} onClick={(e) => isSearching && handleSearchResultClick(e, book)}>
-                <BookCard book={book} />
-              </div>
-            ))
-          )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleMobileDragEnd}
+        onDragMove={handleDragMove}
+      >
+        <div className="flex flex-col h-full">
+          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <SortableContext
+              items={books.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {books.length === 0 ? (
+                isSearching ? (
+                  <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
+                ) : (
+                  <EmptyState quote={uniqueQuotes[activeTab]} />
+                )
+              ) : (
+                books.map((book) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    isDragDisabled={isSearching}
+                    onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
+                  />
+                ))
+              )}
+            </SortableContext>
+          </div>
+
+          <AddButton />
         </div>
-        <AddButton />
-      </div>
+        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+          {activeBook ? (
+            <div className="opacity-90 shadow-lg rounded-xl">
+              <BookCard book={activeBook} />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     );
   }
 
