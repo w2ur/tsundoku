@@ -197,7 +197,7 @@ export default function KanbanBoard({
     const isSearching = Boolean(searchQuery.trim());
     return (
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col h-[calc(100vh-65px)]">
+        <div className="flex flex-col h-full">
           <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
           <Droppable droppableId={activeTab}>
             {(provided) => (
@@ -241,7 +241,7 @@ export default function KanbanBoard({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 p-4 md:p-6 h-[calc(100vh-65px)] overflow-hidden">
+      <div className="flex gap-4 p-4 md:p-6 h-full overflow-hidden">
         {STAGES.map((stage) => (
           <Droppable key={stage} droppableId={stage}>
             {(provided, snapshot) => (

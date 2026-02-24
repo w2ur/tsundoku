@@ -12,14 +12,14 @@ export default function Home() {
   const [scrollToBookId, setScrollToBookId] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Header
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isSearchOpen={isSearchOpen}
         onSearchOpenChange={setIsSearchOpen}
       />
-      <main className="flex-1">
+      <main className="flex-1 min-h-0">
         <KanbanBoard
           searchQuery={searchQuery}
           scrollToBookId={scrollToBookId}
