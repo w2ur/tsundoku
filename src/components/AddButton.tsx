@@ -1,13 +1,23 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useTranslation } from "@/lib/preferences";
 
 export default function AddButton() {
   const { t } = useTranslation();
-  const searchParams = useSearchParams();
-  const stage = searchParams.get("stage") || "tsundoku";
+  const [stage, setStage] = useState("tsundoku");
+
+  useEffect(() => {
+    const syncStage = () => {
+      const params = new URLSearchParams(window.location.search);
+      setStage(params.get("stage") || "tsundoku");
+    };
+    syncStage();
+    window.addEventListener("popstate", syncStage);
+    return () => window.removeEventListener("popstate", syncStage);
+  }, []);
+
   const href = `/add?stage=${stage}`;
 
   return (

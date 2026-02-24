@@ -28,6 +28,7 @@ export default function Header({ searchQuery, onSearchChange, isSearchOpen = fal
   }, [isSearchOpen]);
 
   function handleClose() {
+    inputRef.current?.blur();
     onSearchOpenChange?.(false);
     onSearchChange?.("");
   }

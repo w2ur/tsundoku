@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { useBooksByStage } from "@/hooks/useBooks";
@@ -32,19 +31,34 @@ export default function KanbanBoard({
   onClearSearch,
 }: KanbanBoardProps) {
   const { t, locale } = useTranslation();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const stageParam = searchParams.get("stage");
-  const activeTab: Stage = STAGES.includes(stageParam as Stage)
-    ? (stageParam as Stage)
-    : "tsundoku";
+  const [activeTab, setActiveTabState] = useState<Stage>("tsundoku");
 
-  const setActiveTab = useCallback(
-    (stage: Stage) => {
-      router.replace(`/?stage=${stage}`, { scroll: false });
-    },
-    [router]
-  );
+  // Initialize from URL on mount (client-side only, avoids SSR mismatch)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stage = params.get("stage");
+    if (STAGES.includes(stage as Stage)) {
+      setActiveTabState(stage as Stage);
+    }
+  }, []);
+
+  const setActiveTab = useCallback((stage: Stage) => {
+    setActiveTabState(stage);
+    window.history.replaceState(null, "", `/?stage=${stage}`);
+  }, []);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const stage = params.get("stage");
+      if (STAGES.includes(stage as Stage)) {
+        setActiveTabState(stage as Stage);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const booksByStage = useBooksByStage();
   const isMobile = useIsMobile();
@@ -134,10 +148,13 @@ export default function KanbanBoard({
         source.index === destination.index
       )
         return;
-      const targetStage = destination.droppableId as Stage;
+      // Mobile uses a fixed droppableId — resolve stage from activeTab
+      const targetStage = destination.droppableId === "mobile-list"
+        ? activeTab
+        : (destination.droppableId as Stage);
       await moveBookToPosition(draggableId, targetStage, destination.index);
     },
-    [searchQuery]
+    [searchQuery, activeTab]
   );
 
   const handleSearchResultClick = useCallback(
@@ -193,49 +210,61 @@ export default function KanbanBoard({
   };
 
   if (isMobile) {
-    const books = filteredByStage[activeTab];
     const isSearching = Boolean(searchQuery.trim());
+    const books = filteredByStage[activeTab];
+
     return (
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex flex-col h-full">
-          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
-          <Droppable droppableId={activeTab}>
-            {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="flex-1 overflow-y-auto p-3 space-y-2"
-              >
-                {books.length === 0 ? (
-                  isSearching ? (
-                    <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
-                  ) : (
-                    <EmptyState quote={uniqueQuotes[activeTab]} />
-                  )
-                ) : (
-                  books.map((book, index) => (
-                    <Draggable key={book.id} draggableId={book.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          data-book-id={book.id}
-                          onClick={(e) => handleSearchResultClick(e, book)}
-                        >
-                          <SwipeableBookCard book={book} />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
-                )}
-                {provided.placeholder}
-              </div>
+      <div className="flex flex-col h-full">
+        <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
+
+        {isSearching ? (
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {books.length === 0 ? (
+              <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
+            ) : (
+              books.map((book) => (
+                <div key={book.id} data-book-id={book.id} onClick={(e) => handleSearchResultClick(e, book)}>
+                  <SwipeableBookCard book={book} />
+                </div>
+              ))
             )}
-          </Droppable>
-          <AddButton />
-        </div>
-      </DragDropContext>
+          </div>
+        ) : (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="mobile-list">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="flex-1 overflow-y-auto p-3 space-y-2"
+                >
+                  {books.length === 0 ? (
+                    <EmptyState quote={uniqueQuotes[activeTab]} />
+                  ) : (
+                    books.map((book, index) => (
+                      <Draggable key={book.id} draggableId={book.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            data-book-id={book.id}
+                          >
+                            <SwipeableBookCard book={book} />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
+                  )}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
+
+        <AddButton />
+      </div>
     );
   }
 
