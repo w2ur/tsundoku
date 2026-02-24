@@ -309,6 +309,12 @@ export default function KanbanBoard({
     [isMobile, isSearching, activeTab, slideTarget]
   );
 
+  const handleDragCancel = useCallback(() => {
+    setActiveBook(null);
+    setSlideTarget(null);
+    slideDirection.current = null;
+  }, []);
+
   const handleSearchResultClick = useCallback(
     (e: React.MouseEvent, book: Book) => {
       if (!searchQuery.trim()) return;
@@ -371,6 +377,7 @@ export default function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleMobileDragEnd}
         onDragMove={handleDragMove}
+        onDragCancel={handleDragCancel}
       >
         <div className="flex flex-col h-full">
           <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
@@ -412,9 +419,7 @@ export default function KanbanBoard({
             {/* Adjacent column — slides in from the side */}
             {slideTarget && filteredByStage && (
               <div
-                className={`absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out ${
-                  slideTarget ? "translate-x-0" : slideDirection.current === "right" ? "translate-x-full" : "-translate-x-full"
-                }`}
+                className="absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out translate-x-0"
               >
                 <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${STAGE_CONFIG[slideTarget].bgColor} mb-2`}>
                   <span className="text-base">{STAGE_CONFIG[slideTarget].emoji}</span>
@@ -457,6 +462,7 @@ export default function KanbanBoard({
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="flex gap-4 p-4 md:p-6 h-full overflow-hidden">
         {STAGES.map((stage) => {
