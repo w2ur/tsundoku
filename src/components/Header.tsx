@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
@@ -9,16 +9,16 @@ import { useTranslation } from "@/lib/preferences";
 interface HeaderProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  isSearchOpen?: boolean;
+  onSearchOpenChange?: (open: boolean) => void;
 }
 
-export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
+export default function Header({ searchQuery, onSearchChange, isSearchOpen = false, onSearchOpenChange }: HeaderProps) {
   const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
   const hasSearch = Boolean(onSearchChange);
-
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
   }, [isSearchOpen]);
 
   function handleClose() {
-    setIsSearchOpen(false);
+    onSearchOpenChange?.(false);
     onSearchChange?.("");
   }
 
@@ -139,7 +139,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
       <div className="flex items-center gap-1">
         {hasSearch && !isSearchOpen && (
           <button
-            onClick={() => setIsSearchOpen(true)}
+            onClick={() => onSearchOpenChange?.(true)}
             className="p-2 rounded-lg hover:bg-forest/5 transition-colors"
             aria-label={t("header_search")}
           >
