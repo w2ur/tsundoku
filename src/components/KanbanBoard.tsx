@@ -345,6 +345,22 @@ export default function KanbanBoard({
     [isSearching, virtualItems, filteredByStage]
   );
 
+  const handleMobileDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setActiveBook(null);
+      if (isSearching) return;
+
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const bookId = active.id as string;
+      const books = filteredByStage ? filteredByStage[activeTab] : [];
+      const overIndex = books.findIndex((b) => b.id === (over.id as string));
+      if (overIndex === -1) return;
+      await moveBookToPosition(bookId, activeTab, overIndex);
+    },
+    [isSearching, filteredByStage, activeTab]
+  );
+
   const handleDragCancel = useCallback(() => {
     setActiveBook(null);
     setVirtualItems(null);
@@ -407,31 +423,51 @@ export default function KanbanBoard({
     const books = filteredByStage[activeTab];
 
     return (
-      <div className="flex flex-col h-full">
-        <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleMobileDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="flex flex-col h-full">
+          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {books.length === 0 ? (
-            isSearching ? (
-              <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
-            ) : (
-              <EmptyState quote={uniqueQuotes[activeTab]} />
-            )
-          ) : (
-            books.map((book) =>
-              isSearching ? (
-                <div key={book.id} data-book-id={book.id}>
-                  <BookCard book={book} onClick={(e) => handleSearchResultClick(e, book)} />
-                </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <SortableContext
+              items={books.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {books.length === 0 ? (
+                isSearching ? (
+                  <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
+                ) : (
+                  <EmptyState quote={uniqueQuotes[activeTab]} />
+                )
               ) : (
-                <SwipeableBookCard key={book.id} book={book} />
-              )
-            )
-          )}
-        </div>
+                books.map((book) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    isDragDisabled={isSearching}
+                    isMobile
+                    onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
+                  />
+                ))
+              )}
+            </SortableContext>
+          </div>
 
-        <AddButton />
-      </div>
+          <AddButton />
+        </div>
+        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+          {activeBook ? (
+            <div className="opacity-90 shadow-lg rounded-xl">
+              <BookCard book={activeBook} />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     );
   }
 

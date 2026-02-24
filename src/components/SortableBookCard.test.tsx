@@ -34,6 +34,12 @@ vi.mock("next/image", () => ({
   ),
 }));
 
+vi.mock("./SwipeableBookCard", () => ({
+  default: ({ book }: { book: { title: string } }) => (
+    <div data-testid="swipeable-card">{book.title}</div>
+  ),
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -64,5 +70,15 @@ describe("SortableBookCard", () => {
   it("applies isDragDisabled", () => {
     render(<SortableBookCard book={book} isDragDisabled />);
     expect(screen.getByText("Test Book")).toBeDefined();
+  });
+
+  it("renders SwipeableBookCard when isMobile and drag enabled", () => {
+    const { container } = render(<SortableBookCard book={book} isMobile />);
+    expect(container.querySelector("[data-testid='swipeable-card']")).toBeDefined();
+  });
+
+  it("renders BookCard when isMobile but drag disabled", () => {
+    render(<SortableBookCard book={book} isMobile isDragDisabled />);
+    expect(screen.getByRole("link")).toBeDefined();
   });
 });
