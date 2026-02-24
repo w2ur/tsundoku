@@ -36,7 +36,7 @@ describe("Footer", () => {
 
   it("renders contact link with mailto", () => {
     renderWithPreferences(<Footer />);
-    const link = screen.getByRole("link", { name: /me contacter/i });
+    const link = screen.getByRole("link", { name: /contact/i });
     expect(link).toHaveAttribute(
       "href",
       expect.stringContaining("mailto:contact@my-tsundoku.app")
