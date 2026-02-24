@@ -8,6 +8,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.8.0",
+    date: "2026-02-24",
+    changes: {
+      fr: [
+        "Nouveau moteur de glisser-déposer pour une meilleure compatibilité iOS Safari",
+        "Nouveau : animation de glissement de colonne pour déplacer les livres entre étapes sur mobile",
+        "Le livre suit le curseur librement entre les colonnes sur bureau",
+      ],
+      en: [
+        "New drag-and-drop engine for better iOS Safari compatibility",
+        "New: column slide-in animation when moving books between stages on mobile",
+        "Books follow the cursor freely across columns on desktop",
+      ],
+    },
+  },
+  {
     version: "1.7.0",
     date: "2026-02-22",
     changes: {
