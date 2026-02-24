@@ -286,9 +286,8 @@ export default function KanbanBoard({
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             data-book-id={book.id}
-                            onClick={(e) => handleSearchResultClick(e, book)}
                           >
-                            <BookCard book={book} />
+                            <BookCard book={book} onClick={(e) => handleSearchResultClick(e, book)} />
                           </div>
                         )}
                       </Draggable>

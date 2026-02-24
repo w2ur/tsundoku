@@ -5,11 +5,12 @@ import Image from "next/image";
 import type { Book } from "@/lib/types";
 import { useTranslation } from "@/lib/preferences";
 
-export default function BookCard({ book }: { book: Book }) {
+export default function BookCard({ book, onClick }: { book: Book; onClick?: (e: React.MouseEvent) => void }) {
   const { t } = useTranslation();
   return (
     <Link
       href={`/book/${book.id}`}
+      onClick={onClick}
       className="group flex gap-3 p-3 rounded-xl bg-surface hover:bg-cream border border-forest/5 hover:border-forest/10 transition-all shadow-sm hover:shadow"
     >
       <div className="relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden bg-cream">
