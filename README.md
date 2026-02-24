@@ -46,7 +46,7 @@ src/
 │   ├── settings/          # Settings & backup
 │   └── ~offline/          # Offline fallback page
 ├── components/    # Reusable UI components
-├── hooks/         # Custom React hooks (useBooks, useIsMobile)
+├── hooks/         # Custom React hooks (useBooks, useBook, useBooksByStage, useIsMobile)
 └── lib/           # Business logic, types, DB, constants
 ```
 
