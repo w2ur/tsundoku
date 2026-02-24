@@ -243,34 +243,34 @@ export default function KanbanBoard({
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex gap-4 p-4 md:p-6 h-full overflow-hidden">
         {STAGES.map((stage) => (
-          <Droppable key={stage} droppableId={stage}>
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={`flex-1 min-w-0 flex flex-col rounded-xl p-2 transition-colors ${
-                  snapshot.isDraggingOver ? "bg-forest/5" : "bg-cream/50"
-                }`}
+          <div key={stage} className="flex-1 min-w-0 flex flex-col rounded-xl p-2 bg-cream/50">
+            <div className="flex items-center gap-2 px-3 py-2 mb-2">
+              <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
+                {t(STAGE_CONFIG[stage].labelKey)}
+              </h2>
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
+                {counts[stage]}
+              </span>
+              <Link
+                href={`/add?stage=${stage}`}
+                className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
+                aria-label={t("kanban_addBookToStage").replace("{stage}", t(STAGE_CONFIG[stage].labelKey))}
               >
-                <div className="flex items-center gap-2 px-3 py-2 mb-2">
-                  <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
-                    {t(STAGE_CONFIG[stage].labelKey)}
-                  </h2>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
-                    {counts[stage]}
-                  </span>
-                  <Link
-                    href={`/add?stage=${stage}`}
-                    className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
-                    aria-label={t("kanban_addBookToStage").replace("{stage}", t(STAGE_CONFIG[stage].labelKey))}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14" />
-                      <path d="M12 5v14" />
-                    </svg>
-                  </Link>
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="M12 5v14" />
+                </svg>
+              </Link>
+            </div>
+            <Droppable droppableId={stage}>
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px] rounded-lg transition-colors ${
+                    snapshot.isDraggingOver ? "bg-forest/5" : ""
+                  }`}
+                >
                   {filteredByStage[stage].length === 0 ? (
                     searchQuery.trim() ? (
                       <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
@@ -295,9 +295,9 @@ export default function KanbanBoard({
                   )}
                   {provided.placeholder}
                 </div>
-              </div>
-            )}
-          </Droppable>
+              )}
+            </Droppable>
+          </div>
         ))}
       </div>
     </DragDropContext>
