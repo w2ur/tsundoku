@@ -14,6 +14,7 @@ import {
   useDroppable,
   type DragStartEvent,
   type DragEndEvent,
+  type DragMoveEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -27,6 +28,7 @@ import type { Stage, Book } from "@/lib/types";
 import { matchesSearch } from "@/lib/search";
 import { getUniqueQuotes } from "@/lib/quotes";
 import { useTranslation } from "@/lib/preferences";
+import { vibrate } from "@/lib/swipe";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
 import BookCard from "./BookCard";
@@ -39,6 +41,8 @@ interface KanbanBoardProps {
   onScrollToBook?: (bookId: string | null) => void;
   onClearSearch?: () => void;
 }
+
+const SLIDE_THRESHOLD = 80;
 
 function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -277,10 +281,32 @@ export default function KanbanBoard({
   );
 
   const handleDragMove = useCallback(
-    () => {
-      // Column slide-in logic — implemented in Task 5
+    (event: DragMoveEvent) => {
+      if (!isMobile || isSearching) return;
+
+      const dx = event.delta.x;
+      const stageIndex = STAGES.indexOf(activeTab);
+
+      if (dx > SLIDE_THRESHOLD && stageIndex < STAGES.length - 1) {
+        const target = STAGES[stageIndex + 1];
+        if (slideTarget !== target) {
+          setSlideTarget(target);
+          slideDirection.current = "right";
+          vibrate(10);
+        }
+      } else if (dx < -SLIDE_THRESHOLD && stageIndex > 0) {
+        const target = STAGES[stageIndex - 1];
+        if (slideTarget !== target) {
+          setSlideTarget(target);
+          slideDirection.current = "left";
+          vibrate(10);
+        }
+      } else if (slideTarget !== null) {
+        setSlideTarget(null);
+        slideDirection.current = null;
+      }
     },
-    []
+    [isMobile, isSearching, activeTab, slideTarget]
   );
 
   const handleSearchResultClick = useCallback(
@@ -349,28 +375,67 @@ export default function KanbanBoard({
         <div className="flex flex-col h-full">
           <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            <SortableContext
-              items={books.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
+          <div className="flex-1 overflow-hidden relative">
+            {/* Current column — slides out when slideTarget is set */}
+            <div
+              className={`absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out ${
+                slideTarget
+                  ? slideDirection.current === "right"
+                    ? "-translate-x-full"
+                    : "translate-x-full"
+                  : "translate-x-0"
+              }`}
             >
-              {books.length === 0 ? (
-                isSearching ? (
-                  <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
+              <SortableContext
+                items={books.map((b) => b.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {books.length === 0 ? (
+                  isSearching ? (
+                    <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
+                  ) : (
+                    <EmptyState quote={uniqueQuotes[activeTab]} />
+                  )
                 ) : (
-                  <EmptyState quote={uniqueQuotes[activeTab]} />
-                )
-              ) : (
-                books.map((book) => (
-                  <SortableBookCard
-                    key={book.id}
-                    book={book}
-                    isDragDisabled={isSearching}
-                    onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
-                  />
-                ))
-              )}
-            </SortableContext>
+                  books.map((book) => (
+                    <SortableBookCard
+                      key={book.id}
+                      book={book}
+                      isDragDisabled={isSearching}
+                      onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
+                    />
+                  ))
+                )}
+              </SortableContext>
+            </div>
+
+            {/* Adjacent column — slides in from the side */}
+            {slideTarget && filteredByStage && (
+              <div
+                className={`absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out ${
+                  slideTarget ? "translate-x-0" : slideDirection.current === "right" ? "translate-x-full" : "-translate-x-full"
+                }`}
+              >
+                <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${STAGE_CONFIG[slideTarget].bgColor} mb-2`}>
+                  <span className="text-base">{STAGE_CONFIG[slideTarget].emoji}</span>
+                  <span className={`text-sm font-medium ${STAGE_CONFIG[slideTarget].color}`}>
+                    {t(STAGE_CONFIG[slideTarget].labelKey)}
+                  </span>
+                  <span className={`text-xs ${STAGE_CONFIG[slideTarget].color} opacity-60`}>
+                    ({filteredByStage[slideTarget].length})
+                  </span>
+                </div>
+                {filteredByStage[slideTarget].length === 0 ? (
+                  <EmptyState quote={uniqueQuotes[slideTarget]} />
+                ) : (
+                  filteredByStage[slideTarget].map((book) => (
+                    <div key={book.id} className="opacity-60">
+                      <BookCard book={book} />
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           <AddButton />
