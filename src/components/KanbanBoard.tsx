@@ -15,6 +15,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
   type DragMoveEvent,
+  type DragOverEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -184,7 +185,21 @@ export default function KanbanBoard({
   );
 
   const [activeBook, setActiveBook] = useState<Book | null>(null);
+  const [virtualItems, setVirtualItems] = useState<Record<Stage, string[]> | null>(null);
+  const initialVirtualItemsRef = useRef<Record<Stage, string[]> | null>(null);
   const isSearching = Boolean(searchQuery.trim());
+
+  // Map of all books by ID for rendering from virtualItems
+  const allBooksMap = useMemo(() => {
+    if (!filteredByStage) return new Map<string, Book>();
+    const map = new Map<string, Book>();
+    for (const stage of STAGES) {
+      for (const book of filteredByStage[stage]) {
+        map.set(book.id, book);
+      }
+    }
+    return map;
+  }, [filteredByStage]);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -197,14 +212,78 @@ export default function KanbanBoard({
           break;
         }
       }
+      // Snapshot book IDs for cross-column placeholder tracking
+      const snapshot: Record<Stage, string[]> = {} as Record<Stage, string[]>;
+      for (const stage of STAGES) {
+        snapshot[stage] = filteredByStage[stage].map((b) => b.id);
+      }
+      setVirtualItems(snapshot);
+      initialVirtualItemsRef.current = snapshot;
     },
     [filteredByStage]
   );
 
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      if (isSearching) return;
+
+      setVirtualItems((prev) => {
+        if (!prev) return prev;
+
+        const activeId = event.active.id as string;
+        const over = event.over;
+        if (!over) return prev;
+        const overId = over.id as string;
+
+        // Find which container has the active item
+        let activeContainer: Stage | null = null;
+        for (const stage of STAGES) {
+          if (prev[stage].includes(activeId)) {
+            activeContainer = stage;
+            break;
+          }
+        }
+        if (!activeContainer) return prev;
+
+        // Find which container has the over item
+        let overContainer: Stage | null = null;
+        if (STAGES.includes(overId as Stage)) {
+          overContainer = overId as Stage;
+        } else {
+          for (const stage of STAGES) {
+            if (prev[stage].includes(overId)) {
+              overContainer = stage;
+              break;
+            }
+          }
+        }
+        if (!overContainer || activeContainer === overContainer) return prev;
+
+        // Cross-container: move item from source to target
+        const newItems = { ...prev };
+        newItems[activeContainer] = prev[activeContainer].filter((id) => id !== activeId);
+        const targetItems = [...prev[overContainer]];
+        if (STAGES.includes(overId as Stage)) {
+          targetItems.push(activeId);
+        } else {
+          const overIndex = targetItems.indexOf(overId);
+          targetItems.splice(overIndex !== -1 ? overIndex : targetItems.length, 0, activeId);
+        }
+        newItems[overContainer] = targetItems;
+        return newItems;
+      });
+    },
+    [isSearching]
+  );
+
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
+      const currentVirtualItems = virtualItems;
       setActiveBook(null);
-      if (isSearching) return;
+      setVirtualItems(null);
+      initialVirtualItemsRef.current = null;
+
+      if (isSearching || !currentVirtualItems) return;
 
       const { active, over } = event;
       if (!over) return;
@@ -212,26 +291,25 @@ export default function KanbanBoard({
       const bookId = active.id as string;
       const overId = over.id as string;
 
-      // Check if dropped on empty column (overId is a stage name)
+      // Find target stage from virtualItems
       let targetStage: Stage | null = null;
-      let targetIndex = 0;
-
-      if (STAGES.includes(overId as Stage)) {
-        targetStage = overId as Stage;
-        targetIndex = filteredByStage ? filteredByStage[targetStage].length : 0;
-      } else if (filteredByStage) {
-        // over.id is a book — find its stage and index
-        for (const stage of STAGES) {
-          const idx = filteredByStage[stage].findIndex((b) => b.id === overId);
-          if (idx !== -1) {
-            targetStage = stage;
-            targetIndex = idx;
-            break;
-          }
+      for (const stage of STAGES) {
+        if (currentVirtualItems[stage].includes(bookId)) {
+          targetStage = stage;
+          break;
         }
       }
-
       if (!targetStage) return;
+
+      // Calculate target index (position in array excluding the dragged item)
+      const targetWithout = currentVirtualItems[targetStage].filter((id) => id !== bookId);
+      let targetIndex: number;
+      if (STAGES.includes(overId as Stage)) {
+        targetIndex = targetWithout.length;
+      } else {
+        const overIndex = targetWithout.indexOf(overId);
+        targetIndex = overIndex !== -1 ? overIndex : targetWithout.length;
+      }
 
       // Skip if same position
       if (filteredByStage) {
@@ -246,7 +324,7 @@ export default function KanbanBoard({
 
       await moveBookToPosition(bookId, targetStage, targetIndex);
     },
-    [isSearching, filteredByStage]
+    [isSearching, virtualItems, filteredByStage]
   );
 
   const [slideTarget, setSlideTarget] = useState<Stage | null>(null);
@@ -255,29 +333,41 @@ export default function KanbanBoard({
   const handleMobileDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const currentSlideTarget = slideTarget;
+      const currentVirtualItems = virtualItems;
       setActiveBook(null);
       setSlideTarget(null);
       slideDirection.current = null;
+      setVirtualItems(null);
+      initialVirtualItemsRef.current = null;
 
-      if (isSearching) return;
+      if (isSearching || !currentVirtualItems) return;
       const { active, over } = event;
       const bookId = active.id as string;
 
       // If we have a slide target, move to adjacent stage
       if (currentSlideTarget) {
-        await moveBookToPosition(bookId, currentSlideTarget, 0);
+        const targetItems = currentVirtualItems[currentSlideTarget].filter((id) => id !== bookId);
+        let targetIndex: number;
+        if (over && over.id !== bookId && targetItems.includes(over.id as string)) {
+          targetIndex = targetItems.indexOf(over.id as string);
+        } else {
+          // Default to top of column
+          targetIndex = 0;
+        }
+        await moveBookToPosition(bookId, currentSlideTarget, targetIndex);
         setActiveTab(currentSlideTarget);
         return;
       }
 
-      // Otherwise, vertical reorder within current tab
+      // Vertical reorder within current tab
       if (!over || active.id === over.id) return;
-      const books = filteredByStage ? filteredByStage[activeTab] : [];
-      const overIndex = books.findIndex((b) => b.id === over.id);
+      const items = currentVirtualItems[activeTab];
+      const targetWithout = items.filter((id) => id !== bookId);
+      const overIndex = targetWithout.indexOf(over.id as string);
       if (overIndex === -1) return;
       await moveBookToPosition(bookId, activeTab, overIndex);
     },
-    [isSearching, filteredByStage, activeTab, slideTarget, setActiveTab]
+    [isSearching, virtualItems, activeTab, slideTarget, setActiveTab]
   );
 
   const handleDragMove = useCallback(
@@ -286,6 +376,7 @@ export default function KanbanBoard({
 
       const dx = event.delta.x;
       const stageIndex = STAGES.indexOf(activeTab);
+      const activeId = event.active.id as string;
 
       if (dx > SLIDE_THRESHOLD && stageIndex < STAGES.length - 1) {
         const target = STAGES[stageIndex + 1];
@@ -293,6 +384,16 @@ export default function KanbanBoard({
           setSlideTarget(target);
           slideDirection.current = "right";
           vibrate(10);
+          // Move book to adjacent column in virtualItems
+          setVirtualItems((prev) => {
+            if (!prev) return prev;
+            const newItems = { ...prev };
+            newItems[activeTab] = prev[activeTab].filter((id) => id !== activeId);
+            if (!prev[target].includes(activeId)) {
+              newItems[target] = [activeId, ...prev[target]];
+            }
+            return newItems;
+          });
         }
       } else if (dx < -SLIDE_THRESHOLD && stageIndex > 0) {
         const target = STAGES[stageIndex - 1];
@@ -300,10 +401,24 @@ export default function KanbanBoard({
           setSlideTarget(target);
           slideDirection.current = "left";
           vibrate(10);
+          // Move book to adjacent column in virtualItems
+          setVirtualItems((prev) => {
+            if (!prev) return prev;
+            const newItems = { ...prev };
+            newItems[activeTab] = prev[activeTab].filter((id) => id !== activeId);
+            if (!prev[target].includes(activeId)) {
+              newItems[target] = [activeId, ...prev[target]];
+            }
+            return newItems;
+          });
         }
       } else if (slideTarget !== null) {
         setSlideTarget(null);
         slideDirection.current = null;
+        // Restore original virtualItems when coming back
+        if (initialVirtualItemsRef.current) {
+          setVirtualItems(initialVirtualItemsRef.current);
+        }
       }
     },
     [isMobile, isSearching, activeTab, slideTarget]
@@ -313,6 +428,8 @@ export default function KanbanBoard({
     setActiveBook(null);
     setSlideTarget(null);
     slideDirection.current = null;
+    setVirtualItems(null);
+    initialVirtualItemsRef.current = null;
   }, []);
 
   const handleSearchResultClick = useCallback(
@@ -369,6 +486,7 @@ export default function KanbanBoard({
 
   if (isMobile) {
     const books = filteredByStage[activeTab];
+    const currentItemIds = virtualItems ? virtualItems[activeTab] : books.map((b) => b.id);
 
     return (
       <DndContext
@@ -394,30 +512,35 @@ export default function KanbanBoard({
               }`}
             >
               <SortableContext
-                items={books.map((b) => b.id)}
+                items={currentItemIds}
                 strategy={verticalListSortingStrategy}
               >
-                {books.length === 0 ? (
+                {currentItemIds.length === 0 ? (
                   isSearching ? (
                     <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                   ) : (
                     <EmptyState quote={uniqueQuotes[activeTab]} />
                   )
                 ) : (
-                  books.map((book) => (
-                    <SortableBookCard
-                      key={book.id}
-                      book={book}
-                      isDragDisabled={isSearching}
-                      onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
-                    />
-                  ))
+                  currentItemIds.map((id) => {
+                    const book = allBooksMap.get(id);
+                    if (!book) return null;
+                    return (
+                      <SortableBookCard
+                        key={id}
+                        book={book}
+                        isDragDisabled={isSearching}
+                        isMobile
+                        onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
+                      />
+                    );
+                  })
                 )}
               </SortableContext>
             </div>
 
             {/* Adjacent column — slides in from the side */}
-            {slideTarget && filteredByStage && (
+            {slideTarget && virtualItems && (
               <div
                 className="absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out translate-x-0"
               >
@@ -430,15 +553,28 @@ export default function KanbanBoard({
                     ({filteredByStage[slideTarget].length})
                   </span>
                 </div>
-                {filteredByStage[slideTarget].length === 0 ? (
-                  <EmptyState quote={uniqueQuotes[slideTarget]} />
-                ) : (
-                  filteredByStage[slideTarget].map((book) => (
-                    <div key={book.id} className="opacity-60">
-                      <BookCard book={book} />
-                    </div>
-                  ))
-                )}
+                <DroppableColumn id={slideTarget}>
+                  <SortableContext
+                    items={virtualItems[slideTarget]}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {virtualItems[slideTarget].length === 0 ? (
+                      <EmptyState quote={uniqueQuotes[slideTarget]} />
+                    ) : (
+                      virtualItems[slideTarget].map((id) => {
+                        const book = allBooksMap.get(id);
+                        if (!book) return null;
+                        return (
+                          <SortableBookCard
+                            key={id}
+                            book={book}
+                            isDragDisabled
+                          />
+                        );
+                      })
+                    )}
+                  </SortableContext>
+                </DroppableColumn>
               </div>
             )}
           </div>
@@ -461,12 +597,13 @@ export default function KanbanBoard({
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
       <div className="flex gap-4 p-4 md:p-6 h-full overflow-hidden">
         {STAGES.map((stage) => {
-          const stageBooks = filteredByStage[stage];
+          const itemIds = virtualItems ? virtualItems[stage] : filteredByStage[stage].map((b) => b.id);
           return (
             <div key={stage} className="flex-1 min-w-0 flex flex-col rounded-xl p-2 bg-cream/50">
               <div className="flex items-center gap-2 px-3 py-2 mb-2">
@@ -489,24 +626,28 @@ export default function KanbanBoard({
               </div>
               <DroppableColumn id={stage}>
                 <SortableContext
-                  items={stageBooks.map((b) => b.id)}
+                  items={itemIds}
                   strategy={verticalListSortingStrategy}
                 >
-                  {stageBooks.length === 0 ? (
+                  {itemIds.length === 0 ? (
                     searchQuery.trim() ? (
                       <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                     ) : (
                       <EmptyState quote={uniqueQuotes[stage]} />
                     )
                   ) : (
-                    stageBooks.map((book) => (
-                      <SortableBookCard
-                        key={book.id}
-                        book={book}
-                        isDragDisabled={isSearching}
-                        onClick={(e) => handleSearchResultClick(e, book)}
-                      />
-                    ))
+                    itemIds.map((id) => {
+                      const book = allBooksMap.get(id);
+                      if (!book) return null;
+                      return (
+                        <SortableBookCard
+                          key={id}
+                          book={book}
+                          isDragDisabled={isSearching}
+                          onClick={(e) => handleSearchResultClick(e, book)}
+                        />
+                      );
+                    })
                   )}
                 </SortableContext>
               </DroppableColumn>

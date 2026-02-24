@@ -13,12 +13,14 @@ export const changelog: ChangelogEntry[] = [
     changes: {
       fr: [
         "Nouveau moteur de glisser-déposer pour une meilleure compatibilité iOS Safari",
-        "Nouveau : animation de glissement de colonne pour déplacer les livres entre étapes sur mobile",
+        "Les livres montrent un espace de destination lors du déplacement entre colonnes (bureau et mobile)",
+        "Mobile : swipe rapide pour changer d'étape + appui long pour glisser-déposer complet avec colonne adjacente",
         "Le livre suit le curseur librement entre les colonnes sur bureau",
       ],
       en: [
         "New drag-and-drop engine for better iOS Safari compatibility",
-        "New: column slide-in animation when moving books between stages on mobile",
+        "Books show a placeholder gap when dragging between columns (desktop and mobile)",
+        "Mobile: quick swipe for stage changes + long-press for full drag with adjacent column slide-in",
         "Books follow the cursor freely across columns on desktop",
       ],
     },
