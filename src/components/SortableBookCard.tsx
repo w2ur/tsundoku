@@ -3,21 +3,18 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import BookCard from "./BookCard";
-import SwipeableBookCard from "./SwipeableBookCard";
 import type { Book } from "@/lib/types";
 
 interface SortableBookCardProps {
   book: Book;
   isDragDisabled?: boolean;
   onClick?: (e: React.MouseEvent) => void;
-  isMobile?: boolean;
 }
 
 export default function SortableBookCard({
   book,
   isDragDisabled = false,
   onClick,
-  isMobile = false,
 }: SortableBookCardProps) {
   const {
     attributes,
@@ -47,11 +44,7 @@ export default function SortableBookCard({
       {...attributes}
       {...listeners}
     >
-      {isMobile && !isDragDisabled ? (
-        <SwipeableBookCard book={book} />
-      ) : (
-        <BookCard book={book} onClick={onClick} />
-      )}
+      <BookCard book={book} onClick={onClick} />
     </div>
   );
 }
