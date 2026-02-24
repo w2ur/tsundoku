@@ -460,7 +460,7 @@ export default function KanbanBoard({
 
           <AddButton />
         </div>
-        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+        <DragOverlay dropAnimation={null}>
           {activeBook ? (
             <div className="opacity-90 shadow-lg rounded-xl">
               <BookCard book={activeBook} />
