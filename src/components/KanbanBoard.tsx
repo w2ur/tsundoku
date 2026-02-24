@@ -14,7 +14,6 @@ import {
   useDroppable,
   type DragStartEvent,
   type DragEndEvent,
-  type DragMoveEvent,
   type DragOverEvent,
 } from "@dnd-kit/core";
 import {
@@ -29,7 +28,6 @@ import type { Stage, Book } from "@/lib/types";
 import { matchesSearch } from "@/lib/search";
 import { getUniqueQuotes } from "@/lib/quotes";
 import { useTranslation } from "@/lib/preferences";
-import { vibrate } from "@/lib/swipe";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
 import BookCard from "./BookCard";
@@ -42,8 +40,6 @@ interface KanbanBoardProps {
   onScrollToBook?: (bookId: string | null) => void;
   onClearSearch?: () => void;
 }
-
-const SLIDE_THRESHOLD = 80;
 
 function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -348,118 +344,41 @@ export default function KanbanBoard({
     [isSearching, virtualItems, filteredByStage]
   );
 
-  const [slideTarget, setSlideTarget] = useState<Stage | null>(null);
-  const slideDirection = useRef<"left" | "right" | null>(null);
-
   const handleMobileDragEnd = useCallback(
     async (event: DragEndEvent) => {
-      const currentSlideTarget = slideTarget;
-      const currentVirtualItems = virtualItems;
       setActiveBook(null);
-      setSlideTarget(null);
-      slideDirection.current = null;
+      setVirtualItems(null);
       initialVirtualItemsRef.current = null;
-      // Keep virtualItems alive during drop animation and DB write
 
-      if (isSearching || !currentVirtualItems) {
-        setVirtualItems(null);
-        return;
-      }
+      if (isSearching) return;
 
       const { active, over } = event;
+      if (!over) return;
       const bookId = active.id as string;
+      const overId = over.id as string;
 
-      // If we have a slide target, move to adjacent stage
-      if (currentSlideTarget) {
-        const targetItems = currentVirtualItems[currentSlideTarget].filter((id) => id !== bookId);
-        let targetIndex: number;
-        if (over && over.id !== bookId && targetItems.includes(over.id as string)) {
-          targetIndex = targetItems.indexOf(over.id as string);
-        } else {
-          targetIndex = 0;
+      // Dropped on a stage tab → move to that stage
+      if (overId.startsWith("tab-")) {
+        const targetStage = overId.slice(4) as Stage;
+        if (STAGES.includes(targetStage)) {
+          await moveBookToPosition(bookId, targetStage, 0);
+          setActiveTab(targetStage);
         }
-        await moveBookToPosition(bookId, currentSlideTarget, targetIndex);
-        setVirtualItems(null);
-        setActiveTab(currentSlideTarget);
         return;
       }
 
       // Vertical reorder within current tab
-      if (!over || active.id === over.id) {
-        setVirtualItems(null);
-        return;
-      }
-      const items = currentVirtualItems[activeTab];
-      const targetWithout = items.filter((id) => id !== bookId);
-      const overIndex = targetWithout.indexOf(over.id as string);
-      if (overIndex === -1) {
-        setVirtualItems(null);
-        return;
-      }
+      if (active.id === over.id) return;
+      const books = filteredByStage ? filteredByStage[activeTab] : [];
+      const overIndex = books.findIndex((b) => b.id === overId);
+      if (overIndex === -1) return;
       await moveBookToPosition(bookId, activeTab, overIndex);
-      setVirtualItems(null);
     },
-    [isSearching, virtualItems, activeTab, slideTarget, setActiveTab]
-  );
-
-  const handleDragMove = useCallback(
-    (event: DragMoveEvent) => {
-      if (!isMobile || isSearching) return;
-
-      const dx = event.delta.x;
-      const stageIndex = STAGES.indexOf(activeTab);
-      const activeId = event.active.id as string;
-
-      if (dx > SLIDE_THRESHOLD && stageIndex < STAGES.length - 1) {
-        const target = STAGES[stageIndex + 1];
-        if (slideTarget !== target) {
-          setSlideTarget(target);
-          slideDirection.current = "right";
-          vibrate(10);
-          // Move book to adjacent column in virtualItems
-          setVirtualItems((prev) => {
-            if (!prev) return prev;
-            const newItems = { ...prev };
-            newItems[activeTab] = prev[activeTab].filter((id) => id !== activeId);
-            if (!prev[target].includes(activeId)) {
-              newItems[target] = [activeId, ...prev[target]];
-            }
-            return newItems;
-          });
-        }
-      } else if (dx < -SLIDE_THRESHOLD && stageIndex > 0) {
-        const target = STAGES[stageIndex - 1];
-        if (slideTarget !== target) {
-          setSlideTarget(target);
-          slideDirection.current = "left";
-          vibrate(10);
-          // Move book to adjacent column in virtualItems
-          setVirtualItems((prev) => {
-            if (!prev) return prev;
-            const newItems = { ...prev };
-            newItems[activeTab] = prev[activeTab].filter((id) => id !== activeId);
-            if (!prev[target].includes(activeId)) {
-              newItems[target] = [activeId, ...prev[target]];
-            }
-            return newItems;
-          });
-        }
-      } else if (slideTarget !== null) {
-        setSlideTarget(null);
-        slideDirection.current = null;
-        // Restore original virtualItems when coming back
-        if (initialVirtualItemsRef.current) {
-          setVirtualItems(initialVirtualItemsRef.current);
-        }
-      }
-    },
-    [isMobile, isSearching, activeTab, slideTarget]
+    [isSearching, filteredByStage, activeTab, setActiveTab]
   );
 
   const handleDragCancel = useCallback(() => {
     setActiveBook(null);
-    setSlideTarget(null);
-    slideDirection.current = null;
     setVirtualItems(null);
     initialVirtualItemsRef.current = null;
   }, []);
@@ -518,7 +437,6 @@ export default function KanbanBoard({
 
   if (isMobile) {
     const books = filteredByStage[activeTab];
-    const currentItemIds = virtualItems ? virtualItems[activeTab] : books.map((b) => b.id);
 
     return (
       <DndContext
@@ -526,89 +444,34 @@ export default function KanbanBoard({
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleMobileDragEnd}
-        onDragMove={handleDragMove}
         onDragCancel={handleDragCancel}
       >
         <div className="flex flex-col h-full">
-          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
+          <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} isDragActive={!!activeBook} />
 
-          <div className="flex-1 overflow-hidden relative">
-            {/* Current column — slides out when slideTarget is set */}
-            <div
-              className={`absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out ${
-                slideTarget
-                  ? slideDirection.current === "right"
-                    ? "-translate-x-full"
-                    : "translate-x-full"
-                  : "translate-x-0"
-              }`}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <SortableContext
+              items={books.map((b) => b.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext
-                items={currentItemIds}
-                strategy={verticalListSortingStrategy}
-              >
-                {currentItemIds.length === 0 ? (
-                  isSearching ? (
-                    <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
-                  ) : (
-                    <EmptyState quote={uniqueQuotes[activeTab]} />
-                  )
+              {books.length === 0 ? (
+                isSearching ? (
+                  <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                 ) : (
-                  currentItemIds.map((id) => {
-                    const book = allBooksMap.get(id);
-                    if (!book) return null;
-                    return (
-                      <SortableBookCard
-                        key={id}
-                        book={book}
-                        isDragDisabled={isSearching}
-                        isMobile
-                        onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
-                      />
-                    );
-                  })
-                )}
-              </SortableContext>
-            </div>
-
-            {/* Adjacent column — slides in from the side */}
-            {slideTarget && virtualItems && (
-              <div
-                className="absolute inset-0 overflow-y-auto p-3 space-y-2 transition-transform duration-300 ease-out translate-x-0"
-              >
-                <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${STAGE_CONFIG[slideTarget].bgColor} mb-2`}>
-                  <span className="text-base">{STAGE_CONFIG[slideTarget].emoji}</span>
-                  <span className={`text-sm font-medium ${STAGE_CONFIG[slideTarget].color}`}>
-                    {t(STAGE_CONFIG[slideTarget].labelKey)}
-                  </span>
-                  <span className={`text-xs ${STAGE_CONFIG[slideTarget].color} opacity-60`}>
-                    ({filteredByStage[slideTarget].length})
-                  </span>
-                </div>
-                <DroppableColumn id={slideTarget}>
-                  <SortableContext
-                    items={virtualItems[slideTarget]}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {virtualItems[slideTarget].length === 0 ? (
-                      <EmptyState quote={uniqueQuotes[slideTarget]} />
-                    ) : (
-                      virtualItems[slideTarget].map((id) => {
-                        const book = allBooksMap.get(id);
-                        if (!book) return null;
-                        return (
-                          <SortableBookCard
-                            key={id}
-                            book={book}
-                            isDragDisabled
-                          />
-                        );
-                      })
-                    )}
-                  </SortableContext>
-                </DroppableColumn>
-              </div>
-            )}
+                  <EmptyState quote={uniqueQuotes[activeTab]} />
+                )
+              ) : (
+                books.map((book) => (
+                  <SortableBookCard
+                    key={book.id}
+                    book={book}
+                    isDragDisabled={isSearching}
+                    isMobile
+                    onClick={isSearching ? (e) => handleSearchResultClick(e, book) : undefined}
+                  />
+                ))
+              )}
+            </SortableContext>
           </div>
 
           <AddButton />
