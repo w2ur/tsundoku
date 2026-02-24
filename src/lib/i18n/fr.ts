@@ -4,7 +4,7 @@ const fr = {
   search: "Rechercher",
   optional: "(optionnel)",
   noResults: "Aucun résultat",
-  contactMe: "Me contacter",
+  contactMe: "Contact",
   stage_a_acheter: "Livres à acheter",
   stage_tsundoku: "Tsundoku",
   stage_bibliotheque: "Bibliothèque",

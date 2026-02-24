@@ -6,7 +6,7 @@ const en: Record<TranslationKeys, string> = {
   search: "Search",
   optional: "(optional)",
   noResults: "No results",
-  contactMe: "Contact me",
+  contactMe: "Contact",
   stage_a_acheter: "Wishlist",
   stage_tsundoku: "Tsundoku",
   stage_bibliotheque: "Library",
