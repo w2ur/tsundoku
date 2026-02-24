@@ -2,7 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  useDroppable,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useBooksByStage } from "@/hooks/useBooks";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { moveBookToPosition } from "@/lib/books";
@@ -14,7 +30,7 @@ import { useTranslation } from "@/lib/preferences";
 import StageTabs from "./StageTabs";
 import AddButton from "./AddButton";
 import BookCard from "./BookCard";
-import SwipeableBookCard from "./SwipeableBookCard";
+import SortableBookCard from "./SortableBookCard";
 import EmptyState from "./EmptyState";
 
 interface KanbanBoardProps {
@@ -22,6 +38,21 @@ interface KanbanBoardProps {
   scrollToBookId?: string | null;
   onScrollToBook?: (bookId: string | null) => void;
   onClearSearch?: () => void;
+}
+
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px] rounded-lg transition-colors ${
+        isOver ? "bg-forest/5" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default function KanbanBoard({
@@ -138,23 +169,80 @@ export default function KanbanBoard({
     return Object.fromEntries(STAGES.map((s, i) => [s, quotes[i]])) as Record<Stage, (typeof quotes)[number]>;
   }, [locale]);
 
-  const handleDragEnd = useCallback(
-    async (result: DropResult) => {
-      if (searchQuery.trim()) return;
-      const { draggableId, source, destination } = result;
-      if (!destination) return;
-      if (
-        source.droppableId === destination.droppableId &&
-        source.index === destination.index
-      )
-        return;
-      // Mobile uses a fixed droppableId — resolve stage from activeTab
-      const targetStage = destination.droppableId === "mobile-list"
-        ? activeTab
-        : (destination.droppableId as Stage);
-      await moveBookToPosition(draggableId, targetStage, destination.index);
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor)
+  );
+
+  const [activeBook, setActiveBook] = useState<Book | null>(null);
+  const isSearching = Boolean(searchQuery.trim());
+
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const bookId = event.active.id as string;
+      if (!filteredByStage) return;
+      for (const stage of STAGES) {
+        const found = filteredByStage[stage].find((b) => b.id === bookId);
+        if (found) {
+          setActiveBook(found);
+          break;
+        }
+      }
     },
-    [searchQuery, activeTab]
+    [filteredByStage]
+  );
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      setActiveBook(null);
+      if (isSearching) return;
+
+      const { active, over } = event;
+      if (!over) return;
+
+      const bookId = active.id as string;
+      const overId = over.id as string;
+
+      // Check if dropped on empty column (overId is a stage name)
+      let targetStage: Stage | null = null;
+      let targetIndex = 0;
+
+      if (STAGES.includes(overId as Stage)) {
+        targetStage = overId as Stage;
+        targetIndex = filteredByStage ? filteredByStage[targetStage].length : 0;
+      } else if (filteredByStage) {
+        // over.id is a book — find its stage and index
+        for (const stage of STAGES) {
+          const idx = filteredByStage[stage].findIndex((b) => b.id === overId);
+          if (idx !== -1) {
+            targetStage = stage;
+            targetIndex = idx;
+            break;
+          }
+        }
+      }
+
+      if (!targetStage) return;
+
+      // Skip if same position
+      if (filteredByStage) {
+        for (const stage of STAGES) {
+          const idx = filteredByStage[stage].findIndex((b) => b.id === bookId);
+          if (idx !== -1) {
+            if (stage === targetStage && idx === targetIndex) return;
+            break;
+          }
+        }
+      }
+
+      await moveBookToPosition(bookId, targetStage, targetIndex);
+    },
+    [isSearching, filteredByStage]
   );
 
   const handleSearchResultClick = useCallback(
@@ -210,125 +298,95 @@ export default function KanbanBoard({
   };
 
   if (isMobile) {
-    const isSearching = Boolean(searchQuery.trim());
     const books = filteredByStage[activeTab];
 
     return (
       <div className="flex flex-col h-full">
         <StageTabs active={activeTab} counts={counts} onChange={handleTabChange} searchActive={isSearching} />
-
-        {isSearching ? (
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {books.length === 0 ? (
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {books.length === 0 ? (
+            isSearching ? (
               <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
             ) : (
-              books.map((book) => (
-                <div key={book.id} data-book-id={book.id} onClick={(e) => handleSearchResultClick(e, book)}>
-                  <SwipeableBookCard book={book} />
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="mobile-list">
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="flex-1 overflow-y-auto p-3 space-y-2"
-                >
-                  {books.length === 0 ? (
-                    <EmptyState quote={uniqueQuotes[activeTab]} />
-                  ) : (
-                    books.map((book, index) => (
-                      <Draggable key={book.id} draggableId={book.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            data-book-id={book.id}
-                          >
-                            <SwipeableBookCard book={book} />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        )}
-
+              <EmptyState quote={uniqueQuotes[activeTab]} />
+            )
+          ) : (
+            books.map((book) => (
+              <div key={book.id} data-book-id={book.id} onClick={(e) => isSearching && handleSearchResultClick(e, book)}>
+                <BookCard book={book} />
+              </div>
+            ))
+          )}
+        </div>
         <AddButton />
       </div>
     );
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="flex gap-4 p-4 md:p-6 h-full overflow-hidden">
-        {STAGES.map((stage) => (
-          <div key={stage} className="flex-1 min-w-0 flex flex-col rounded-xl p-2 bg-cream/50">
-            <div className="flex items-center gap-2 px-3 py-2 mb-2">
-              <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
-                {t(STAGE_CONFIG[stage].labelKey)}
-              </h2>
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
-                {counts[stage]}
-              </span>
-              <Link
-                href={`/add?stage=${stage}`}
-                className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
-                aria-label={t("kanban_addBookToStage").replace("{stage}", t(STAGE_CONFIG[stage].labelKey))}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="M12 5v14" />
-                </svg>
-              </Link>
-            </div>
-            <Droppable droppableId={stage}>
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`flex-1 overflow-y-auto space-y-2 px-1 pb-2 min-h-[100px] rounded-lg transition-colors ${
-                    snapshot.isDraggingOver ? "bg-forest/5" : ""
-                  }`}
+        {STAGES.map((stage) => {
+          const stageBooks = filteredByStage[stage];
+          return (
+            <div key={stage} className="flex-1 min-w-0 flex flex-col rounded-xl p-2 bg-cream/50">
+              <div className="flex items-center gap-2 px-3 py-2 mb-2">
+                <h2 className="text-xs font-semibold tracking-widest uppercase text-forest/60">
+                  {t(STAGE_CONFIG[stage].labelKey)}
+                </h2>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-forest/10 text-forest/60 text-xs font-medium">
+                  {counts[stage]}
+                </span>
+                <Link
+                  href={`/add?stage=${stage}`}
+                  className="ml-auto text-forest/30 hover:text-forest/60 transition-colors"
+                  aria-label={t("kanban_addBookToStage").replace("{stage}", t(STAGE_CONFIG[stage].labelKey))}
                 >
-                  {filteredByStage[stage].length === 0 ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                </Link>
+              </div>
+              <DroppableColumn id={stage}>
+                <SortableContext
+                  items={stageBooks.map((b) => b.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {stageBooks.length === 0 ? (
                     searchQuery.trim() ? (
                       <p className="text-center text-sm text-forest/30 py-8">{t("noResults")}</p>
                     ) : (
                       <EmptyState quote={uniqueQuotes[stage]} />
                     )
                   ) : (
-                    filteredByStage[stage].map((book, index) => (
-                      <Draggable key={book.id} draggableId={book.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            data-book-id={book.id}
-                          >
-                            <BookCard book={book} onClick={(e) => handleSearchResultClick(e, book)} />
-                          </div>
-                        )}
-                      </Draggable>
+                    stageBooks.map((book) => (
+                      <SortableBookCard
+                        key={book.id}
+                        book={book}
+                        isDragDisabled={isSearching}
+                        onClick={(e) => handleSearchResultClick(e, book)}
+                      />
                     ))
                   )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
-        ))}
+                </SortableContext>
+              </DroppableColumn>
+            </div>
+          );
+        })}
       </div>
-    </DragDropContext>
+      <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+        {activeBook ? (
+          <div className="opacity-90 shadow-lg rounded-xl">
+            <BookCard book={activeBook} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
