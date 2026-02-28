@@ -11,6 +11,7 @@ import { roadmap } from "@/lib/roadmap";
 import { changelog } from "@/lib/changelog";
 import { useTranslation, useTheme } from "@/lib/preferences";
 import { plural } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export default function SettingsPage() {
   const booksByStage = useBooksByStage();
@@ -19,6 +20,18 @@ export default function SettingsPage() {
     : 0;
   const { t, locale, setLocale } = useTranslation();
   const { theme, setTheme } = useTheme();
+
+  const { user, isSignedIn, isLoading: authLoading, signInWithMagicLink, signOut } = useAuth();
+  const [email, setEmail] = useState("");
+  const [authState, setAuthState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function handleSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setAuthState("sending");
+    const { error } = await signInWithMagicLink(email.trim());
+    setAuthState(error ? "error" : "sent");
+  }
 
   const [showPreferences, setShowPreferences] = useState(false);
   const [showRoadmap, setShowRoadmap] = useState(false);
@@ -44,6 +57,83 @@ export default function SettingsPage() {
       <Header />
       <main className="flex-1 px-4 py-8 max-w-lg mx-auto w-full">
         <h1 className="font-serif text-2xl text-forest mb-8">{t("settings_title")}</h1>
+
+        {!authLoading && (
+          <section className="mb-8">
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-forest/60 mb-3">
+              {t("account_title")}
+            </h2>
+            <div className="bg-surface border border-forest/8 rounded-xl p-4">
+              {isSignedIn ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-forest/70">
+                    {t("account_signedInAs")}{" "}
+                    <span className="font-medium text-ink">{user?.email}</span>
+                  </p>
+                  <button
+                    onClick={() => signOut()}
+                    className="text-sm text-forest/60 underline hover:text-forest/80 transition-colors"
+                  >
+                    {t("account_signOut")}
+                  </button>
+                </div>
+              ) : authState === "sent" ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-forest/70">{t("account_checkEmail")}</p>
+                  <div className="flex gap-3 text-sm">
+                    <button
+                      onClick={() => {
+                        setAuthState("sending");
+                        signInWithMagicLink(email.trim()).then(({ error }) =>
+                          setAuthState(error ? "error" : "sent")
+                        );
+                      }}
+                      className="text-forest/60 underline hover:text-forest/80 transition-colors"
+                    >
+                      {t("account_resend")}
+                    </button>
+                    <span className="text-forest/20">·</span>
+                    <button
+                      onClick={() => {
+                        setEmail("");
+                        setAuthState("idle");
+                      }}
+                      className="text-forest/60 underline hover:text-forest/80 transition-colors"
+                    >
+                      {t("account_differentEmail")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-forest/70">{t("account_signInPrompt")}</p>
+                  <form onSubmit={handleSignIn} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t("account_emailPlaceholder")}
+                      className="flex-1 text-sm bg-paper border border-forest/15 rounded-lg px-3 py-2 text-ink placeholder:text-forest/30 focus:outline-none focus:border-forest/40"
+                      disabled={authState === "sending"}
+                    />
+                    <button
+                      type="submit"
+                      disabled={authState === "sending" || !email.trim()}
+                      className="text-sm bg-forest text-paper rounded-lg px-3 py-2 font-medium disabled:opacity-50 transition-opacity"
+                    >
+                      {authState === "sending"
+                        ? t("account_sending")
+                        : t("account_sendMagicLink")}
+                    </button>
+                  </form>
+                  {authState === "error" && (
+                    <p className="text-xs text-red-500">{t("account_error")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {booksByStage && (
           <section className="mb-8">

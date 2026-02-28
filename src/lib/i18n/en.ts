@@ -1,6 +1,18 @@
 import type { TranslationKeys } from "./index";
 
 const en: Record<TranslationKeys, string> = {
+  account_title: "Account",
+  account_signInPrompt: "Sign in to sync your books across devices",
+  account_emailPlaceholder: "your@email.com",
+  account_sendMagicLink: "Send magic link",
+  account_checkEmail: "Check your email — we sent you a sign-in link",
+  account_resend: "Resend",
+  account_differentEmail: "Use a different email",
+  account_signedInAs: "Signed in as",
+  account_signOut: "Sign out",
+  account_deleteAccount: "Delete account & data",
+  account_sending: "Sending...",
+  account_error: "Error sending link. Try again.",
   loading: "Loading...",
   cancel: "Cancel",
   search: "Search",
