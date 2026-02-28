@@ -12,6 +12,8 @@ export interface BookFormData {
   coverUrl: string;
   notes?: string;
   storeUrl?: string;
+  isbn?: string;
+  olWorkId?: string;
 }
 
 interface Props {
@@ -27,6 +29,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [storeUrl, setStoreUrl] = useState(initial?.storeUrl ?? "");
+  const [isbn, setIsbn] = useState<string | undefined>(initial?.isbn);
+  const [olWorkId, setOlWorkId] = useState<string | undefined>(initial?.olWorkId);
   const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -62,6 +66,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     setTitle(result.title);
     setAuthor(result.author);
     if (result.coverUrl) setCoverUrl(result.coverUrl);
+    setOlWorkId(result.olWorkId);
+    if (result.isbn) setIsbn(result.isbn);
     setSearchResults([]);
     setHasSearched(false);
   }
@@ -75,6 +81,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
       coverUrl,
       ...(notes.trim() && { notes: notes.trim() }),
       ...(storeUrl.trim() && { storeUrl: storeUrl.trim() }),
+      ...(isbn?.trim() && { isbn: isbn.trim() }),
+      ...(olWorkId && { olWorkId }),
     });
   }
 
@@ -98,7 +106,9 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
             type="text"
             value={title}
             onChange={(e) => {
-              setTitle(e.target.value);
+              const val = e.target.value;
+              setTitle(val);
+              if (val.trim() === "") setOlWorkId(undefined);
               setHasSearched(false);
             }}
             onKeyDown={(e) => {
