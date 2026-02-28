@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
+import { searchCommunityBooks, deduplicateResults, type CommunityBook } from "@/lib/community-search";
 import { useTranslation } from "@/lib/preferences";
 import GeneratedCover from "@/components/GeneratedCover";
 import CoverCrop from "@/components/CoverCrop";
@@ -32,6 +33,7 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
   const [isbn, setIsbn] = useState<string | undefined>(initial?.isbn);
   const [olWorkId, setOlWorkId] = useState<string | undefined>(initial?.olWorkId);
   const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
+  const [communityResults, setCommunityResults] = useState<CommunityBook[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -57,8 +59,15 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     if (!title || title.length < 2) return;
     setSearchLoading(true);
     setHasSearched(true);
-    const results = await searchBooks(title, author);
-    setSearchResults(results);
+
+    const [olResults, communityRaw] = await Promise.all([
+      searchBooks(title, author),
+      searchCommunityBooks(title),
+    ]);
+
+    const { ol, community } = deduplicateResults(olResults, communityRaw);
+    setSearchResults(ol);
+    setCommunityResults(community);
     setSearchLoading(false);
   }
 
@@ -68,6 +77,18 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     if (result.coverUrl) setCoverUrl(result.coverUrl);
     setOlWorkId(result.olWorkId);
     if (result.isbn) setIsbn(result.isbn);
+    setSearchResults([]);
+    setCommunityResults([]);
+    setHasSearched(false);
+  }
+
+  function handleCommunitySelect(result: CommunityBook) {
+    setTitle(result.title);
+    setAuthor(result.author);
+    if (result.isbn) setIsbn(result.isbn);
+    setOlWorkId(undefined);
+    setCoverUrl("");
+    setCommunityResults([]);
     setSearchResults([]);
     setHasSearched(false);
   }
@@ -168,6 +189,33 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
             {t("form_addToOpenLibrary")}
           </a>
         </p>
+      )}
+
+      {communityResults.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <span className="text-xs font-medium text-forest/50">{t("community_label")}</span>
+            <span className="text-[10px] text-forest/30">{t("community_disclaimer")}</span>
+          </div>
+          <div className="border border-forest/10 rounded-lg overflow-hidden">
+            {communityResults.map((result) => (
+              <button
+                key={result.id}
+                type="button"
+                onClick={() => handleCommunitySelect(result)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-cream transition-colors border-b border-forest/5 last:border-b-0"
+              >
+                <div className="w-8 h-12 rounded overflow-hidden flex-shrink-0">
+                  <GeneratedCover title={result.title} author={result.author} width={32} height={48} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-ink truncate">{result.title}</p>
+                  <p className="text-xs text-forest/50 truncate">{result.author}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div>

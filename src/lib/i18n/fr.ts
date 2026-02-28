@@ -149,6 +149,8 @@ const fr = {
   cover_cropConfirm: "Valider",
   cover_cropCancel: "Annuler",
   cover_useGenerated: "Utiliser une couverture générée",
+  community_label: "Tsundoku Library",
+  community_disclaimer: "Ajouté par la communauté — peut contenir des erreurs",
 } as const;
 
 export default fr;
