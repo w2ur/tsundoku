@@ -28,6 +28,20 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("@/lib/supabase", () => ({
+  supabase: null,
+}));
+
+vi.mock("@/lib/auth", () => ({
+  useAuth: () => ({ user: null, isSignedIn: false, isLoading: false }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+vi.mock("@/lib/sync", () => ({
+  getSyncStatus: () => "synced",
+  onSyncStatusChange: () => () => {},
+}));
+
 afterEach(() => {
   cleanup();
   mockBack.mockClear();

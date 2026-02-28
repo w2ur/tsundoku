@@ -136,6 +136,15 @@ const fr = {
   book_moveToNextStage: "Déplacer vers {stage} ?",
   book_moveToNextStage_yes: "Oui",
   book_moveToNextStage_no: "Non",
+  sync_synced: "Synchronisé",
+  sync_syncing: "Synchronisation...",
+  sync_pending: "{count} modification(s) en attente",
+  sync_lastSynced: "Dernière sync il y a {time}",
+  migration_title: "Transférer vos livres ?",
+  migration_message: "Vous avez {count} livre(s) sur cet appareil. Les transférer vers votre compte ?",
+  migration_upload: "Oui, transférer",
+  migration_skip: "Non, repartir de zéro",
+  migration_uploading: "Transfert en cours...",
 } as const;
 
 export default fr;

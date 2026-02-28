@@ -136,6 +136,15 @@ const en: Record<TranslationKeys, string> = {
   book_moveToNextStage: "Move to {stage}?",
   book_moveToNextStage_yes: "Yes",
   book_moveToNextStage_no: "No",
+  sync_synced: "Synced",
+  sync_syncing: "Syncing...",
+  sync_pending: "{count} change(s) pending",
+  sync_lastSynced: "Last synced {time} ago",
+  migration_title: "Transfer your books?",
+  migration_message: "You have {count} book(s) on this device. Transfer them to your account?",
+  migration_upload: "Yes, transfer",
+  migration_skip: "No, start fresh",
+  migration_uploading: "Transferring...",
 };
 
 export default en;
