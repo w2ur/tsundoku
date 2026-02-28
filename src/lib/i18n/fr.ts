@@ -145,6 +145,9 @@ const fr = {
   migration_upload: "Oui, transférer",
   migration_skip: "Non, repartir de zéro",
   migration_uploading: "Transfert en cours...",
+  cover_cropTitle: "Recadrer la couverture",
+  cover_cropConfirm: "Valider",
+  cover_cropCancel: "Annuler",
 } as const;
 
 export default fr;

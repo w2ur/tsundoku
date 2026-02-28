@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
 import { useTranslation } from "@/lib/preferences";
 import GeneratedCover from "@/components/GeneratedCover";
+import CoverCrop from "@/components/CoverCrop";
 
 export interface BookFormData {
   title: string;
@@ -29,6 +30,7 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
   const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -37,21 +39,14 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 400;
-        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setCoverUrl(canvas.toDataURL("image/jpeg", 0.7));
-      };
-      img.src = reader.result as string;
+      setCropSrc(reader.result as string);
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleCropComplete(croppedDataUrl: string) {
+    setCoverUrl(croppedDataUrl);
+    setCropSrc(null);
   }
 
   async function handleSearch() {
@@ -87,7 +82,15 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     "w-full px-3 py-2.5 bg-surface border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      {cropSrc && (
+        <CoverCrop
+          src={cropSrc}
+          onCrop={handleCropComplete}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">{t("form_title")}</label>
         <div className="flex gap-2">
@@ -253,5 +256,6 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
         {submitLabel ?? t("form_add")}
       </button>
     </form>
+    </>
   );
 }

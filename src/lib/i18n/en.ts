@@ -145,6 +145,9 @@ const en: Record<TranslationKeys, string> = {
   migration_upload: "Yes, transfer",
   migration_skip: "No, start fresh",
   migration_uploading: "Transferring...",
+  cover_cropTitle: "Crop cover",
+  cover_cropConfirm: "Confirm",
+  cover_cropCancel: "Cancel",
 };
 
 export default en;
