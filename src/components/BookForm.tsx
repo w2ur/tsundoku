@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
 import { useTranslation } from "@/lib/preferences";
+import GeneratedCover from "@/components/GeneratedCover";
 
 export interface BookFormData {
   title: string;
@@ -129,8 +130,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
               {result.coverUrl ? (
                 <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded flex-shrink-0" />
               ) : (
-                <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center flex-shrink-0">
-                  <span className="text-forest/20 text-xs">?</span>
+                <div className="w-8 h-12 rounded overflow-hidden flex-shrink-0">
+                  <GeneratedCover title={result.title} author={result.author} width={32} height={48} />
                 </div>
               )}
               <div className="min-w-0">

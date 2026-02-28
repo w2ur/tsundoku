@@ -58,8 +58,8 @@ const book = {
 describe("SortableBookCard", () => {
   it("renders the book title and author", () => {
     render(<SortableBookCard book={book} />);
-    expect(screen.getByText("Test Book")).toBeDefined();
-    expect(screen.getByText("Test Author")).toBeDefined();
+    expect(screen.getAllByText("Test Book").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Test Author").length).toBeGreaterThan(0);
   });
 
   it("sets data-book-id attribute", () => {
@@ -69,7 +69,7 @@ describe("SortableBookCard", () => {
 
   it("applies isDragDisabled", () => {
     render(<SortableBookCard book={book} isDragDisabled />);
-    expect(screen.getByText("Test Book")).toBeDefined();
+    expect(screen.getAllByText("Test Book").length).toBeGreaterThan(0);
   });
 
   it("renders SwipeableBookCard when isMobile and drag enabled", () => {

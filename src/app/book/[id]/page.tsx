@@ -10,6 +10,7 @@ import StageActions from "@/components/StageActions";
 import DeleteButton from "@/components/DeleteButton";
 import BookForm from "@/components/BookForm";
 import type { BookFormData } from "@/components/BookForm";
+import GeneratedCover from "@/components/GeneratedCover";
 import { useBook } from "@/hooks/useBooks";
 import { updateBook, markAsReading, unmarkReading, moveBookToPosition } from "@/lib/books";
 import { STAGE_TRANSITIONS, STAGE_CONFIG } from "@/lib/constants";
@@ -110,11 +111,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
-                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                    </svg>
-                  </div>
+                  <GeneratedCover title={book.title} author={book.author} width={160} height={240} />
                 )}
               </div>
 
