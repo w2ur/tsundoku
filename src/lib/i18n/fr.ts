@@ -3,7 +3,7 @@ const fr = {
   account_signInPrompt: "Connectez-vous pour synchroniser vos livres entre vos appareils",
   account_emailPlaceholder: "votre@email.com",
   account_sendMagicLink: "Envoyer un lien magique",
-  account_checkEmail: "Vérifiez votre boîte mail — nous vous avons envoyé un lien de connexion",
+  account_checkEmail: "Vérifiez votre boîte mail — nous vous avons envoyé un lien de connexion. Pensez à vérifier vos spams.",
   account_resend: "Renvoyer",
   account_differentEmail: "Utiliser un autre email",
   account_signedInAs: "Connecté en tant que",

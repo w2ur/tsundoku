@@ -5,7 +5,7 @@ const en: Record<TranslationKeys, string> = {
   account_signInPrompt: "Sign in to sync your books across devices",
   account_emailPlaceholder: "your@email.com",
   account_sendMagicLink: "Send magic link",
-  account_checkEmail: "Check your email — we sent you a sign-in link",
+  account_checkEmail: "Check your email — we sent you a sign-in link. Check your spam folder too.",
   account_resend: "Resend",
   account_differentEmail: "Use a different email",
   account_signedInAs: "Signed in as",
