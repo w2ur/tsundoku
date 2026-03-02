@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import GeneratedCover from "@/components/GeneratedCover";
 import { useTranslation } from "@/lib/preferences";
 
 interface Props {
@@ -45,11 +46,7 @@ export default function BookConfirmation({
             unoptimized={coverUrl.startsWith("data:")}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-            </svg>
-          </div>
+          <GeneratedCover title={title} author={author} width={128} height={192} />
         )}
       </div>
 
