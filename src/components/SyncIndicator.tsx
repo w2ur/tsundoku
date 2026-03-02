@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
 import { onSyncStatusChange, getSyncStatus, type SyncStatus } from "@/lib/sync";
 import { useTranslation } from "@/lib/preferences";
@@ -33,7 +34,8 @@ export default function SyncIndicator() {
     >
       <div className="relative p-2 rounded-lg transition-colors" aria-label={label}>
         {status === "syncing" ? (
-          <svg
+          /* Pen writing on paper — gentle horizontal oscillation */
+          <motion.svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
@@ -43,12 +45,15 @@ export default function SyncIndicator() {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-forest/60 animate-spin"
-            style={{ animationDuration: "1.5s" }}
+            className="text-forest/60"
+            animate={{ x: [0, 1.5, 0, -1.5, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            <path d="M21 12a9 9 0 1 1-6.22-8.56" />
-          </svg>
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </motion.svg>
         ) : status === "unsynced" ? (
+          /* Warning triangle — crystal clear error state */
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -61,11 +66,12 @@ export default function SyncIndicator() {
             strokeLinejoin="round"
             className="text-amber"
           >
-            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-            <path d="M12 12v9" />
-            <path d="m16 16-4-4-4 4" />
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
           </svg>
         ) : (
+          /* Closed notebook — at rest, synced */
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -78,8 +84,7 @@ export default function SyncIndicator() {
             strokeLinejoin="round"
             className="text-forest/30"
           >
-            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-            <path d="m9 12 2 2 4-4" />
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
         )}
       </div>
