@@ -13,11 +13,12 @@ export default function ManualAddPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const stage = searchParams.get("stage") || "tsundoku";
+  const isbnParam = searchParams.get("isbn") || undefined;
   const [pending, setPending] = useState<BookFormData | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
-  async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
+  async function handleConfirm(extra: { notes?: string; storeUrl?: string; coverUrl?: string }) {
     if (!pending) return;
     setLoading(true);
     await addBook({ ...pending, ...extra, stage: stage as Stage });
@@ -41,7 +42,7 @@ export default function ManualAddPage() {
             loading={loading}
           />
         ) : (
-          <BookForm onSubmit={setPending} submitLabel={t("form_preview")} />
+          <BookForm onSubmit={setPending} submitLabel={t("form_preview")} initial={isbnParam ? { isbn: isbnParam } : undefined} />
         )}
       </main>
     </div>

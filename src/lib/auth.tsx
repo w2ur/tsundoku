@@ -1,0 +1,150 @@
+"use client";
+
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
+import { supabase } from "./supabase";
+import { db } from "./db";
+import { fullSync, startSyncListeners, enqueueUpsert, flushQueue } from "./sync";
+import type { User } from "@supabase/supabase-js";
+import MigrationPrompt from "@/components/MigrationPrompt";
+
+interface AuthContextValue {
+  user: User | null;
+  isSignedIn: boolean;
+  isLoading: boolean;
+  signInWithMagicLink: (email: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showMigration, setShowMigration] = useState(false);
+  const [localBookCount, setLocalBookCount] = useState(0);
+  const syncCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const sessionUser = session?.user ?? null;
+      setUser(sessionUser);
+      setIsLoading(false);
+      if (sessionUser) {
+        initSync(sessionUser);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        const newUser = session?.user ?? null;
+        setUser(newUser);
+        if (newUser) {
+          initSync(newUser);
+        } else {
+          // User signed out — clean up sync listeners
+          syncCleanupRef.current?.();
+          syncCleanupRef.current = null;
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+      syncCleanupRef.current?.();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function initSync(currentUser: User) {
+    if (!supabase || !db) return;
+
+    // Start sync listeners (online/offline, periodic)
+    syncCleanupRef.current?.();
+    syncCleanupRef.current = startSyncListeners();
+
+    // Check if this is a first sign-in (no sync_metadata for this user)
+    const { data: syncMeta } = await supabase
+      .from("sync_metadata")
+      .select("last_synced_at")
+      .eq("user_id", currentUser.id)
+      .single();
+
+    const isFirstSync = !syncMeta;
+    const count = await db.books.count();
+
+    if (isFirstSync && count > 0) {
+      // Local books exist and never synced before — show migration prompt
+      setLocalBookCount(count);
+      setShowMigration(true);
+    } else {
+      // Returning user or no local books — just sync
+      fullSync();
+    }
+  }
+
+  async function handleMigrationUpload() {
+    if (!supabase || !db) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const localBooks = await db.books.toArray();
+    for (const book of localBooks) {
+      enqueueUpsert(book);
+    }
+    await flushQueue();
+    setShowMigration(false);
+  }
+
+  function handleMigrationSkip() {
+    setShowMigration(false);
+    fullSync();
+  }
+
+  const signInWithMagicLink = useCallback(async (email: string) => {
+    if (!supabase) return { error: "Not available on server" };
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setUser(null);
+  }, []);
+
+  return (
+    <AuthContext value={{
+      user,
+      isSignedIn: !!user,
+      isLoading,
+      signInWithMagicLink,
+      signOut,
+    }}>
+      {children}
+      {showMigration && (
+        <MigrationPrompt
+          bookCount={localBookCount}
+          onUpload={handleMigrationUpload}
+          onSkip={handleMigrationSkip}
+        />
+      )}
+    </AuthContext>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}

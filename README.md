@@ -1,26 +1,36 @@
 # Tsundoku
 
-Tsundoku (積ん読) is a PWA for organizing personal book collections. Inspired by the Japanese concept of letting unread books pile up, it provides a Kanban-style board to track books across four stages: wishlist, unread pile, library, and to sell. Available in French and English, with light and dark mode. All data is stored locally in the browser via IndexedDB — no account needed.
+Tsundoku (積ん読) is a PWA for organizing personal book collections. Inspired by the Japanese concept of letting unread books pile up, it provides a Kanban-style board to track books across four stages: wishlist, unread pile, library, and to sell. Available in French and English, with light and dark mode. Works offline with local-first storage — optionally sign in to sync across devices and contribute to the community book catalog.
 
 ## Tech Stack
 
 - **Next.js 16** (App Router, Turbopack) + **React 19** + **TypeScript**
 - **Tailwind CSS v4** for styling
-- **Dexie.js** for IndexedDB (client-side storage)
+- **Dexie.js** for IndexedDB (local-first storage)
+- **Supabase** for auth (magic link), cloud sync, storage, and community catalog
 - **Serwist** for PWA / service worker (configurator mode)
 - **@dnd-kit/core + @dnd-kit/sortable** for drag-and-drop
 - **motion** for animations
 - **html5-qrcode** for barcode scanning
+- **react-image-crop** for cover photo cropping
 - **Vitest** for testing
 
 ## Running Locally
 
 ```bash
+cp .env.example .env.local   # fill in your Supabase credentials
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:9876](http://localhost:9876).
+
+### Environment Variables
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable (anon) key |
 
 ### Build
 
@@ -58,7 +68,6 @@ Planned features (in no particular order):
 - **Book clubs** — Find readers with the same books and start a club
 - **Find in bookstores** — Find your books in online bookstores
 - **Reading statistics** — Track how many books you read per month and year
-- **Cloud sync** — Sync your library across devices
 
 Have a suggestion? [Get in touch](mailto:contact@my-tsundoku.app).
 

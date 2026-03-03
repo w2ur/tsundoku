@@ -2,7 +2,10 @@
 
 import { useRef, useState } from "react";
 import { searchBooks, type OpenLibraryResult } from "@/lib/open-library";
+import { searchCommunityBooks, deduplicateResults, type CommunityBook } from "@/lib/community-search";
 import { useTranslation } from "@/lib/preferences";
+import GeneratedCover from "@/components/GeneratedCover";
+import CoverCrop from "@/components/CoverCrop";
 
 export interface BookFormData {
   title: string;
@@ -10,6 +13,8 @@ export interface BookFormData {
   coverUrl: string;
   notes?: string;
   storeUrl?: string;
+  isbn?: string;
+  olWorkId?: string;
 }
 
 interface Props {
@@ -25,9 +30,13 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
   const [coverUrl, setCoverUrl] = useState(initial?.coverUrl ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [storeUrl, setStoreUrl] = useState(initial?.storeUrl ?? "");
+  const [isbn, setIsbn] = useState<string | undefined>(initial?.isbn);
+  const [olWorkId, setOlWorkId] = useState<string | undefined>(initial?.olWorkId);
   const [searchResults, setSearchResults] = useState<OpenLibraryResult[]>([]);
+  const [communityResults, setCommunityResults] = useState<CommunityBook[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -36,29 +45,29 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 400;
-        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setCoverUrl(canvas.toDataURL("image/jpeg", 0.7));
-      };
-      img.src = reader.result as string;
+      setCropSrc(reader.result as string);
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleCropComplete(croppedDataUrl: string) {
+    setCoverUrl(croppedDataUrl);
+    setCropSrc(null);
   }
 
   async function handleSearch() {
     if (!title || title.length < 2) return;
     setSearchLoading(true);
     setHasSearched(true);
-    const results = await searchBooks(title, author);
-    setSearchResults(results);
+
+    const [olResults, communityRaw] = await Promise.all([
+      searchBooks(title, author),
+      searchCommunityBooks(title),
+    ]);
+
+    const { ol, community } = deduplicateResults(olResults, communityRaw);
+    setSearchResults(ol);
+    setCommunityResults(community);
     setSearchLoading(false);
   }
 
@@ -66,6 +75,20 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     setTitle(result.title);
     setAuthor(result.author);
     if (result.coverUrl) setCoverUrl(result.coverUrl);
+    setOlWorkId(result.olWorkId);
+    if (result.isbn) setIsbn(result.isbn);
+    setSearchResults([]);
+    setCommunityResults([]);
+    setHasSearched(false);
+  }
+
+  function handleCommunitySelect(result: CommunityBook) {
+    setTitle(result.title);
+    setAuthor(result.author);
+    if (result.isbn) setIsbn(result.isbn);
+    setOlWorkId(undefined);
+    setCoverUrl("");
+    setCommunityResults([]);
     setSearchResults([]);
     setHasSearched(false);
   }
@@ -79,6 +102,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
       coverUrl,
       ...(notes.trim() && { notes: notes.trim() }),
       ...(storeUrl.trim() && { storeUrl: storeUrl.trim() }),
+      ...(isbn?.trim() && { isbn: isbn.trim() }),
+      ...(olWorkId && { olWorkId }),
     });
   }
 
@@ -86,7 +111,15 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
     "w-full px-3 py-2.5 bg-surface border border-forest/15 rounded-lg text-sm text-ink placeholder:text-forest/30 focus:outline-none focus:ring-2 focus:ring-forest/20 focus:border-forest/30";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      {cropSrc && (
+        <CoverCrop
+          src={cropSrc}
+          onCrop={handleCropComplete}
+          onCancel={() => setCropSrc(null)}
+        />
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-forest/70 mb-1">{t("form_title")}</label>
         <div className="flex gap-2">
@@ -94,7 +127,9 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
             type="text"
             value={title}
             onChange={(e) => {
-              setTitle(e.target.value);
+              const val = e.target.value;
+              setTitle(val);
+              if (val.trim() === "") setOlWorkId(undefined);
               setHasSearched(false);
             }}
             onKeyDown={(e) => {
@@ -129,8 +164,8 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
               {result.coverUrl ? (
                 <img src={result.coverUrl} alt="" className="w-8 h-12 object-cover rounded flex-shrink-0" />
               ) : (
-                <div className="w-8 h-12 bg-forest/5 rounded flex items-center justify-center flex-shrink-0">
-                  <span className="text-forest/20 text-xs">?</span>
+                <div className="w-8 h-12 rounded overflow-hidden flex-shrink-0">
+                  <GeneratedCover title={result.title} author={result.author} width={32} height={48} />
                 </div>
               )}
               <div className="min-w-0">
@@ -154,6 +189,33 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
             {t("form_addToOpenLibrary")}
           </a>
         </p>
+      )}
+
+      {communityResults.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 px-1 pt-2">
+            <span className="text-xs font-medium text-forest/50">{t("community_label")}</span>
+            <span className="text-[10px] text-forest/30">{t("community_disclaimer")}</span>
+          </div>
+          <div className="border border-forest/10 rounded-lg overflow-hidden">
+            {communityResults.map((result) => (
+              <button
+                key={result.id}
+                type="button"
+                onClick={() => handleCommunitySelect(result)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-cream transition-colors border-b border-forest/5 last:border-b-0"
+              >
+                <div className="w-8 h-12 rounded overflow-hidden flex-shrink-0">
+                  <GeneratedCover title={result.title} author={result.author} width={32} height={48} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-ink truncate">{result.title}</p>
+                  <p className="text-xs text-forest/50 truncate">{result.author}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div>
@@ -252,5 +314,6 @@ export default function BookForm({ initial, onSubmit, submitLabel }: Props) {
         {submitLabel ?? t("form_add")}
       </button>
     </form>
+    </>
   );
 }

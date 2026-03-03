@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import BookConfirmation from "@/components/BookConfirmation";
 import { getBookByISBN } from "@/lib/open-library";
 import { addBook } from "@/lib/books";
+import { isValidISBN } from "@/lib/isbn";
 import type { Stage } from "@/lib/types";
 import { useTranslation } from "@/lib/preferences";
 
@@ -76,7 +77,7 @@ export default function ScanPage() {
     lookup(isbn);
   }
 
-  async function handleConfirm(extra: { notes?: string; storeUrl?: string }) {
+  async function handleConfirm(extra: { notes?: string; storeUrl?: string; coverUrl?: string }) {
     if (!bookData) return;
     setSaving(true);
     await addBook({ ...bookData, ...extra, isbn, stage: stage as Stage });
@@ -158,7 +159,7 @@ export default function ScanPage() {
             {/* Escape hatch */}
             <div className="text-center pt-2">
               <a
-                href={`/add/manual?stage=${stage}`}
+                href={isbn && isValidISBN(isbn) ? `/add/manual?stage=${stage}&isbn=${isbn}` : `/add/manual?stage=${stage}`}
                 className="text-sm text-forest/40 hover:text-forest/60 transition-colors"
               >
                 {t("scan_manualEntry")}

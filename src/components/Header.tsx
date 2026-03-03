@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslation } from "@/lib/preferences";
+import SyncIndicator from "./SyncIndicator";
 
 interface HeaderProps {
   searchQuery?: string;
@@ -146,6 +147,7 @@ export default function Header({ searchQuery, onSearchChange, isSearchOpen = fal
       </AnimatePresence>
 
       <div className="flex items-center gap-1">
+        <SyncIndicator />
         {hasSearch && !isSearchOpen && (
           <button
             onClick={() => onSearchOpenChange?.(true)}

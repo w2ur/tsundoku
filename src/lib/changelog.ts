@@ -8,6 +8,32 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "2.0.0",
+    date: "2026-02-28",
+    changes: {
+      fr: [
+        "Nouveau : créez un compte pour synchroniser vos livres entre vos appareils",
+        "Sauvegarde automatique dans le cloud à chaque modification",
+        "Couvertures générées pour les livres sans image",
+        "Recadrage des photos de couverture avant l'ajout",
+        "Catalogue communautaire : les livres ajoutés manuellement enrichissent la recherche pour tous",
+        "Recherche enrichie : résultats Open Library + catalogue communautaire",
+        "Passage de l'ISBN scanné vers la saisie manuelle en cas d'échec",
+        "Suppression de compte et des données associées",
+      ],
+      en: [
+        "New: create an account to sync your books across devices",
+        "Automatic cloud backup on every change",
+        "Generated covers for books without an image",
+        "Crop cover photos before adding them",
+        "Community catalog: manually-added books enrich search for everyone",
+        "Enriched search: Open Library + community catalog results",
+        "Pass scanned ISBN to manual entry on lookup failure",
+        "Delete account and associated data",
+      ],
+    },
+  },
+  {
     version: "1.8.1",
     date: "2026-02-25",
     changes: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import StageActions from "@/components/StageActions";
 import DeleteButton from "@/components/DeleteButton";
 import BookForm from "@/components/BookForm";
 import type { BookFormData } from "@/components/BookForm";
+import GeneratedCover from "@/components/GeneratedCover";
 import { useBook } from "@/hooks/useBooks";
 import { updateBook, markAsReading, unmarkReading, moveBookToPosition } from "@/lib/books";
 import { STAGE_TRANSITIONS, STAGE_CONFIG } from "@/lib/constants";
@@ -21,7 +22,16 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [showUnmarkPrompt, setShowUnmarkPrompt] = useState(false);
+  const originalCoverRef = useRef<string | null>(null);
   const { t } = useTranslation();
+
+  // Capture the first non-empty coverUrl we see (before any toggle)
+  if (book && originalCoverRef.current === null && book.coverUrl) {
+    originalCoverRef.current = book.coverUrl;
+  }
+  const savedOriginal = originalCoverRef.current ?? "";
+  // Can toggle if there's a saved original cover (even if current is "")
+  const canToggleCover = Boolean(savedOriginal);
 
   if (book === undefined) {
     return (
@@ -110,11 +120,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                     unoptimized
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-forest/20">
-                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                    </svg>
-                  </div>
+                  <GeneratedCover title={book.title} author={book.author} width={160} height={240} />
                 )}
               </div>
 
@@ -125,12 +131,25 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 )}
               </div>
 
-              <button
-                onClick={() => setEditing(true)}
-                className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
-              >
-                {t("book_edit")}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+                >
+                  {t("book_edit")}
+                </button>
+                {canToggleCover && (
+                  <button
+                    onClick={() => {
+                      const next = book.coverUrl ? "" : savedOriginal;
+                      updateBook(book.id, { coverUrl: next });
+                    }}
+                    className="text-xs text-forest/40 underline hover:text-forest/60 transition-colors"
+                  >
+                    {book.coverUrl ? t("cover_useGenerated") : t("cover_useOriginal")}
+                  </button>
+                )}
+              </div>
             </>
           )}
 
